@@ -41,8 +41,20 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# static assets (supplied from production, not tracked)
-/public
+# public: commit the (small) images so they deploy, but keep heavy media out
+# of git — these folders/types are multi-GB and exceed GitHub's file limits.
+# Host videos on a CDN / Firebase Storage instead.
+/public/videos/
+/public/vid/
+/public/dash/
+/public/data/
+/public/Store/
+/public/backgrounds/
+*.mp4
+*.m4s
+*.mpd
+*.sql
+Thumbs.db
 
 # Firebase service account keys — SECRET, never commit
 *firebase-adminsdk*.json
