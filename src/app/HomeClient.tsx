@@ -10,7 +10,7 @@ import AttractionsSection from "@/components/AttractionsSection";
 import Testimonial from "@/components/Testimonial";
 import Footer from "@/components/Footer";
 import { Star } from "lucide-react";
-import { media } from "@/lib/media";
+import LazyVideo from "@/components/LazyVideo";
 
 interface Review {
   name: string;
@@ -486,20 +486,20 @@ const HomeClient = () => {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <motion.img src="/bhopal/1.png" alt="Bhopal" className="rounded-lg shadow-lg w-full h-48 object-cover" animate={{ x: [0, -10, 10, 0], y: [0, -5, 5, 0], rotate: [0, -2, 2, 0] }} transition={{ duration: 6, repeat: Infinity }} />
-              <motion.img src="/bhopal/3.png" alt="Bhopal" className="rounded-lg shadow-lg w-full h-48 object-cover mt-8" animate={{ x: [0, 8, -8, 0], y: [0, -3, 3, 0], rotate: [0, 1, -1, 0] }} transition={{ duration: 5, repeat: Infinity, delay: 0.5 }} />
-              <motion.img src="/bhopal/4.png" alt="Bhopal" className="rounded-lg shadow-lg w-full h-48 object-cover" animate={{ x: [0, -6, 6, 0], y: [0, 4, -4, 0], rotate: [0, -1, 1, 0] }} transition={{ duration: 7, repeat: Infinity, delay: 1 }} />
-              <motion.img src="/bhopal/5.png" alt="Bhopal" className="rounded-lg shadow-lg w-full h-48 object-cover mt-8" animate={{ x: [0, 12, -12, 0], y: [0, -6, 6, 0], rotate: [0, 3, -3, 0] }} transition={{ duration: 4, repeat: Infinity, delay: 1.5 }} />
+              <motion.img src="/bhopal/1.png" alt="Bhopal" loading="lazy" className="rounded-lg shadow-lg w-full h-48 object-cover" animate={{ x: [0, -10, 10, 0], y: [0, -5, 5, 0], rotate: [0, -2, 2, 0] }} transition={{ duration: 6, repeat: Infinity }} />
+              <motion.img src="/bhopal/3.png" alt="Bhopal" loading="lazy" className="rounded-lg shadow-lg w-full h-48 object-cover mt-8" animate={{ x: [0, 8, -8, 0], y: [0, -3, 3, 0], rotate: [0, 1, -1, 0] }} transition={{ duration: 5, repeat: Infinity, delay: 0.5 }} />
+              <motion.img src="/bhopal/4.png" alt="Bhopal" loading="lazy" className="rounded-lg shadow-lg w-full h-48 object-cover" animate={{ x: [0, -6, 6, 0], y: [0, 4, -4, 0], rotate: [0, -1, 1, 0] }} transition={{ duration: 7, repeat: Infinity, delay: 1 }} />
+              <motion.img src="/bhopal/5.png" alt="Bhopal" loading="lazy" className="rounded-lg shadow-lg w-full h-48 object-cover mt-8" animate={{ x: [0, 12, -12, 0], y: [0, -6, 6, 0], rotate: [0, 3, -3, 0] }} transition={{ duration: 4, repeat: Infinity, delay: 1.5 }} />
             </div>
           </div>
 
           {/* ORCHHA */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-16">
             <div className="grid grid-cols-2 gap-4 order-2 lg:order-1">
-              <motion.img src="/orchha/orchha (1).jpg" alt="Orchha" className="rounded-lg shadow-lg w-full h-48 object-cover" animate={{ x: [0, -8, 8, 0], y: [0, 5, -5, 0], rotate: [0, -2, 2, 0] }} transition={{ duration: 6, repeat: Infinity }} />
+              <motion.img src="/orchha/orchha (1).jpg" alt="Orchha" loading="lazy" className="rounded-lg shadow-lg w-full h-48 object-cover" animate={{ x: [0, -8, 8, 0], y: [0, 5, -5, 0], rotate: [0, -2, 2, 0] }} transition={{ duration: 6, repeat: Infinity }} />
               <div />
               <div />
-              <motion.img src="/orchha/orchha (2).jpg" alt="Orchha" className="rounded-lg shadow-lg w-full h-48 object-cover" animate={{ x: [0, 10, -10, 0], y: [0, -4, 4, 0], rotate: [0, 1, -1, 0] }} transition={{ duration: 5, repeat: Infinity, delay: 0.5 }} />
+              <motion.img src="/orchha/orchha (2).jpg" alt="Orchha" loading="lazy" className="rounded-lg shadow-lg w-full h-48 object-cover" animate={{ x: [0, 10, -10, 0], y: [0, -4, 4, 0], rotate: [0, 1, -1, 0] }} transition={{ duration: 5, repeat: Infinity, delay: 0.5 }} />
             </div>
 
             <div className="space-y-6 order-1 lg:order-2">
@@ -539,18 +539,18 @@ const HomeClient = () => {
             </div>
 
             <div className="grid grid-cols-2 gap-10">
-              <motion.img src="/boat club/boat club.jpeg" alt="Boat Club" className="rounded-lg shadow-lg w-full h-48 object-cover" animate={{ x: [0, -10, 10, 0], y: [0, -5, 5, 0], rotate: [0, -2, 2, 0] }} transition={{ duration: 6, repeat: Infinity }} />
-              <motion.img src="/boat club/boat club1.jpeg" alt="Boat Club VR" className="rounded-lg shadow-lg w-full h-48 object-cover mt-8" animate={{ x: [0, 8, -8, 0], y: [0, 4, -4, 0], rotate: [0, 1, -1, 0] }} transition={{ duration: 5, repeat: Infinity, delay: 0.5 }} />
+              <motion.img src="/boat club/boat club.jpeg" alt="Boat Club" loading="lazy" className="rounded-lg shadow-lg w-full h-48 object-cover" animate={{ x: [0, -10, 10, 0], y: [0, -5, 5, 0], rotate: [0, -2, 2, 0] }} transition={{ duration: 6, repeat: Infinity }} />
+              <motion.img src="/boat club/boat club1.jpeg" alt="Boat Club VR" loading="lazy" className="rounded-lg shadow-lg w-full h-48 object-cover mt-8" animate={{ x: [0, 8, -8, 0], y: [0, 4, -4, 0], rotate: [0, 1, -1, 0] }} transition={{ duration: 5, repeat: Infinity, delay: 0.5 }} />
             </div>
           </div>
 
           {/* MAHESHWAR */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="grid grid-cols-2 gap-4 order-2 lg:order-1">
-              <motion.img src="/maheshwar/maheshwar.jpeg" alt="Maheshwar" className="rounded-lg shadow-lg w-full h-48 object-cover" animate={{ x: [0, -8, 8, 0], y: [0, 5, -5, 0], rotate: [0, -2, 2, 0] }} transition={{ duration: 6, repeat: Infinity }} />
+              <motion.img src="/maheshwar/maheshwar.jpeg" alt="Maheshwar" loading="lazy" className="rounded-lg shadow-lg w-full h-48 object-cover" animate={{ x: [0, -8, 8, 0], y: [0, 5, -5, 0], rotate: [0, -2, 2, 0] }} transition={{ duration: 6, repeat: Infinity }} />
               <div />
               <div />
-              <motion.img src="/maheshwar/maheshwar1.jpeg" alt="Maheshwar" className="rounded-lg shadow-lg w-full h-48 object-cover" animate={{ x: [0, 10, -10, 0], y: [0, -4, 4, 0], rotate: [0, 1, -1, 0] }} transition={{ duration: 5, repeat: Infinity, delay: 0.5 }} />
+              <motion.img src="/maheshwar/maheshwar1.jpeg" alt="Maheshwar" loading="lazy" className="rounded-lg shadow-lg w-full h-48 object-cover" animate={{ x: [0, 10, -10, 0], y: [0, -4, 4, 0], rotate: [0, 1, -1, 0] }} transition={{ duration: 5, repeat: Infinity, delay: 0.5 }} />
             </div>
 
             <div className="space-y-6 order-1 lg:order-2">
@@ -614,8 +614,8 @@ const HomeClient = () => {
         transition={{ duration: 1, delay: 0.2 }}
         viewport={{ once: true }}
       >
-        <video
-          src={media("/vid/bootom_video_just_above_footer.mp4")}
+        <LazyVideo
+          src="/vid/bootom_video_just_above_footer.mp4"
           className="w-full h-full cursor-pointer"
           autoPlay
           loop

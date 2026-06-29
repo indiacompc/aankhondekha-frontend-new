@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { media } from "@/lib/media";
+import LazyVideo from "@/components/LazyVideo";
 
 const videos = [
   { id: 1, src: "/videos/Orchha Testimotial 1.mp4" },
@@ -87,8 +87,8 @@ const Testimonial = () => {
       onMouseLeave={() => setIsScrolling(true)}
     >
       <div className="relative w-full h-full">
-        <video
-          src={media(video.src)}
+        <LazyVideo
+          src={video.src}
           className="w-full h-full object-cover"
           autoPlay
           loop
