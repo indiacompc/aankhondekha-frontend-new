@@ -10,6 +10,7 @@ import AttractionsSection from "@/components/AttractionsSection";
 import Testimonial from "@/components/Testimonial";
 import Footer from "@/components/Footer";
 import { Star } from "lucide-react";
+import { media } from "@/lib/media";
 
 interface Review {
   name: string;
@@ -614,7 +615,7 @@ const HomeClient = () => {
         viewport={{ once: true }}
       >
         <video
-          src="/vid/bootom_video_just_above_footer.mp4"
+          src={media("/vid/bootom_video_just_above_footer.mp4")}
           className="w-full h-full cursor-pointer"
           autoPlay
           loop

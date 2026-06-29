@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { media } from "@/lib/media";
 
 const videos = [
   { id: 1, src: "/videos/Orchha Testimotial 1.mp4" },
@@ -90,7 +91,7 @@ const Testimonial = () => {
     >
       <div className="relative w-full h-full">
         <video
-          src={video.src}
+          src={media(video.src)}
           className="w-full h-full object-cover"
           autoPlay
           loop
