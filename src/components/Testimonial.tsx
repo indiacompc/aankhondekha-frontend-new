@@ -10,9 +10,6 @@ const videos = [
   { id: 4, src: "/videos/Orchha Testimonial 15.mp4" },
   { id: 14, src: "/videos/Orchha testimomnials 4.mp4" },
   { id: 15, src: "/videos/Serior Citizen reel.mp4" },
-  { id: 17, src: "/videos/Testimonial 7.mp4" },
-  { id: 18, src: "/videos/Testimonial 8.mp4" },
-  { id: 19, src: "/videos/Testimonial Orchha Marathi 3.mp4" },
 ];
 
 const SpeakerIcon = ({ muted }: { muted: boolean }) =>
