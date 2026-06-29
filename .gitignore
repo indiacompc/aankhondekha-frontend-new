@@ -43,3 +43,8 @@ next-env.d.ts
 
 # static assets (supplied from production, not tracked)
 /public
+
+# Firebase service account keys — SECRET, never commit
+*firebase-adminsdk*.json
+serviceAccount*.json
+*-service-account*.json

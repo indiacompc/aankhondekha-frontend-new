@@ -60,17 +60,49 @@ src/
 3. Add the same env vars from `.env.local` in **Project Settings → Environment Variables**.
 4. Deploy. Vercel runs `next build` and serves it.
 
+## Firestore setup & seeding
+
+1. In the Firebase Console enable **Authentication → Phone & Email/Password**, create the **Firestore** database, and (optional) **Storage**.
+2. Put your service-account key (`*firebase-adminsdk*.json`) in the project root — it's git-ignored.
+3. Seed reference data + a Super Admin:
+   ```bash
+   npm run seed          # 14 days of slots; pass a number for more, e.g. `node scripts/seed.mjs 30`
+   ```
+   This creates events, sample ticket types, slots, and a Super Admin
+   (`admin@aankhondekha.com` / `Admin@12345` — change the password after first login).
+   Override with `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` env vars.
+4. Publish security rules from [`firestore.rules`](./firestore.rules):
+   Firebase Console → Firestore → Rules → paste → Publish.
+
+## Booking flow
+
+`/location → /register (if new) → /ticket-type → /quantity → /date-selection →
+/slot-selection → /payment (mock) → /confirmation (QR)`
+
+- Capacity is decremented atomically in a Firestore transaction (no overbooking).
+- GST is 18% inclusive; complimentary tickets = floor(qty/4); tour guide for Bhopal qty ≥ 10.
+- **Payment is mocked** — the booking is marked paid without a real charge. Razorpay can be added later (keys already scaffolded in `.env.example`).
+
+## Admin
+
+- `/admin` — email/password login (Firebase Auth). Role comes from the `admins/{uid}` Firestore doc.
+- Role homes: Super Admin → `/super-admin`, Ops Admin → `/admin-ops`, Reception → `/admin-dashboard`.
+- `/ticket-verification` — look up a ticket by ID and check it in (sets `isValid=false`).
+- Add more admins by creating an Auth user + an `admins/{uid}` doc (extend the seed script).
+
 ## Migration status
 
 **Done (this phase):** foundation, design system, Firebase wiring, shared components,
 and the public/static pages (Home, About, Contact, Newsletter, Terms, Privacy,
 Cancellation/Refund).
 
+**Done:** Phone-OTP registration, Firestore data model + rules + seed, full booking
+flow (mock payment) with QR confirmation, admin login + roles + ticket verification.
+
 **Next phases (not yet ported):**
 
-- Auth (Firebase Auth) + user/customer context
-- Booking flow: location → ticket type → quantity → date → slot → payment → confirmation
-- Razorpay payment integration (server-side via Route Handlers / Server Actions)
-- Admin: dashboard, ticket verification, slot generator, attendance, super-admin
-- Firestore data model + Security Rules to replace the FastAPI routes
-  (customers, tickets, slots, payments, OTP, events, field-visit, etc.)
+- Real Razorpay payment (server-side verify via Route Handler) instead of mock
+- Gift tickets, referral codes
+- Admin dashboards/analytics, reports export, slot-generator UI, attendance
+- WhatsApp/SMS confirmations
+- QR-scan camera input on the verification screen (currently manual ID entry)

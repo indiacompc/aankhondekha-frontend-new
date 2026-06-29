@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { Toaster } from "sonner";
+import { CustomerProvider } from "@/components/CustomerProvider";
+import { BookingProvider } from "@/components/BookingProvider";
+import { AuthProvider } from "@/components/AuthProvider";
 import "./globals.css";
 
 const siteUrl = "https://aankhondekha.com";
@@ -62,7 +65,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
-        {children}
+        <AuthProvider>
+          <CustomerProvider>
+            <BookingProvider>{children}</BookingProvider>
+          </CustomerProvider>
+        </AuthProvider>
         <Toaster position="top-center" richColors />
 
         <script
