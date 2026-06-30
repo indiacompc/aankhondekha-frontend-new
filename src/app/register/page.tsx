@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -21,6 +22,7 @@ import {
 } from "firebase/auth";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
+import { toE164 } from "@/lib/phone";
 import { useCustomer } from "@/components/CustomerProvider";
 
 const GENDERS = ["Male", "Female", "Other"];
@@ -28,19 +30,6 @@ const AGE_GROUPS = ["Under 18", "18–25", "26–40", "41–60", "60+"];
 
 const inputClass =
   "w-full pl-10 pr-3 py-2 bg-[#595959] text-white placeholder:text-white/70 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#96FF00] focus:border-transparent outline-none";
-
-/** Format a 10-digit Indian number to E.164 (+91…). Leaves +-prefixed input as-is. */
-function toE164(raw: string): string | null {
-  const trimmed = raw.trim();
-  if (trimmed.startsWith("+")) {
-    const digits = trimmed.replace(/[^\d]/g, "");
-    return digits.length >= 11 ? `+${digits}` : null;
-  }
-  const digits = trimmed.replace(/\D/g, "");
-  if (digits.length === 10) return `+91${digits}`;
-  if (digits.length === 12 && digits.startsWith("91")) return `+${digits}`;
-  return null;
-}
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -323,6 +312,13 @@ export default function RegisterPage() {
               </>
             )}
           </form>
+
+          <p className="text-center text-white/70 text-sm mt-4">
+            Already have an account?{" "}
+            <Link href="/login" className="text-[#96FF00] hover:underline">
+              Login
+            </Link>
+          </p>
         </motion.div>
 
         {/* Invisible reCAPTCHA mount point (required by Firebase Phone Auth) */}

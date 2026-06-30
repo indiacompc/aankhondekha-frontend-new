@@ -1,0 +1,194 @@
+"use client";
+
+import { useRef, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { toast } from "sonner";
+import { Phone, Lock, ArrowLeft, ArrowRight } from "lucide-react";
+import {
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+  signOut,
+  type ConfirmationResult,
+} from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "@/lib/firebase";
+import { toE164 } from "@/lib/phone";
+import { useCustomer, type Customer } from "@/components/CustomerProvider";
+import { useBooking } from "@/components/BookingProvider";
+
+const inputClass =
+  "w-full pl-10 pr-3 py-2 bg-[#595959] text-white placeholder:text-white/70 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#96FF00] focus:border-transparent outline-none";
+
+export default function LoginPage() {
+  const router = useRouter();
+  const { setCustomer } = useCustomer();
+  const { event } = useBooking();
+
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const recaptchaRef = useRef<RecaptchaVerifier | null>(null);
+  const confirmationRef = useRef<ConfirmationResult | null>(null);
+
+  const getRecaptcha = () => {
+    if (!recaptchaRef.current) {
+      recaptchaRef.current = new RecaptchaVerifier(auth, "recaptcha-login", {
+        size: "invisible",
+      });
+    }
+    return recaptchaRef.current;
+  };
+
+  const sendOtp = async () => {
+    const e164 = toE164(phone);
+    if (!e164) {
+      toast.error("Enter a valid 10-digit mobile number");
+      return;
+    }
+    setLoading(true);
+    try {
+      confirmationRef.current = await signInWithPhoneNumber(
+        auth,
+        e164,
+        getRecaptcha(),
+      );
+      toast.success(`OTP sent to ${e164}`);
+      setOtpSent(true);
+    } catch (err) {
+      console.error(err);
+      toast.error(err instanceof Error ? err.message : "Failed to send OTP");
+      recaptchaRef.current?.clear();
+      recaptchaRef.current = null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otp || !confirmationRef.current) {
+      toast.error("Please request and enter the OTP");
+      return;
+    }
+    setLoading(true);
+    try {
+      const cred = await confirmationRef.current.confirm(otp);
+      const snap = await getDoc(doc(db, "customers", cred.user.uid));
+      if (!snap.exists()) {
+        // Authenticated but never registered a profile.
+        await signOut(auth);
+        toast.error("No account found. Please register first.");
+        router.push("/register");
+        return;
+      }
+      setCustomer(snap.data() as Customer);
+      toast.success("Logged in");
+      router.push(event ? "/ticket-type" : "/");
+    } catch (err) {
+      console.error(err);
+      toast.error("Invalid or expired OTP");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#121212] p-6">
+      <div className="max-w-md mx-auto">
+        <div className="mb-6 flex items-center">
+          <button
+            onClick={() => router.push("/")}
+            className="w-10 h-10 rounded-full bg-white/80 flex items-center justify-center shadow-md"
+            aria-label="Go home"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <h1 className="ml-5 font-bold text-[24px] text-white">Login</h1>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="bg-[#595959] rounded-xl p-6 shadow-lg"
+        >
+          <form onSubmit={verify} className="space-y-4">
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-white mb-1">
+                Mobile Number
+              </label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 h-4 w-4" />
+                <input
+                  id="phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className={inputClass}
+                  placeholder="Enter mobile number"
+                  disabled={otpSent}
+                  required
+                />
+              </div>
+            </div>
+
+            {!otpSent ? (
+              <button
+                type="button"
+                onClick={sendOtp}
+                disabled={loading}
+                className="mt-2 w-full py-3 rounded-xl bg-[#99160B] text-white font-medium flex items-center justify-center disabled:opacity-60"
+              >
+                {loading ? "Sending…" : "Send OTP"}
+                {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
+              </button>
+            ) : (
+              <>
+                <div>
+                  <label htmlFor="otp" className="block text-sm font-medium text-white mb-1">
+                    OTP Verification
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 h-4 w-4" />
+                    <input
+                      id="otp"
+                      type="text"
+                      inputMode="numeric"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      className={inputClass}
+                      placeholder="Enter OTP"
+                      maxLength={6}
+                      required
+                    />
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="mt-2 w-full py-3 rounded-xl bg-[#99160B] text-white font-medium disabled:opacity-60"
+                >
+                  {loading ? "Verifying…" : "Verify & Login"}
+                </button>
+              </>
+            )}
+          </form>
+
+          <p className="text-center text-white/70 text-sm mt-4">
+            New here?{" "}
+            <Link href="/register" className="text-[#96FF00] hover:underline">
+              Create an account
+            </Link>
+          </p>
+        </motion.div>
+
+        {/* Invisible reCAPTCHA mount point (required by Firebase Phone Auth) */}
+        <div id="recaptcha-login" />
+      </div>
+    </div>
+  );
+}
