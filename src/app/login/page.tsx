@@ -14,7 +14,7 @@ import {
 } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
-import { toE164 } from "@/lib/phone";
+import { toE164, digitsOnly, isValidMobile } from "@/lib/phone";
 import { useCustomer, type Customer } from "@/components/CustomerProvider";
 import { useBooking } from "@/components/BookingProvider";
 
@@ -43,9 +43,11 @@ export default function LoginPage() {
     return recaptchaRef.current;
   };
 
+  const phoneValid = isValidMobile(phone);
+
   const sendOtp = async () => {
     const e164 = toE164(phone);
-    if (!e164) {
+    if (!phoneValid || !e164) {
       toast.error("Enter a valid 10-digit mobile number");
       return;
     }
@@ -126,22 +128,28 @@ export default function LoginPage() {
                 <input
                   id="phone"
                   type="tel"
+                  inputMode="numeric"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) => setPhone(digitsOnly(e.target.value, 10))}
                   className={inputClass}
-                  placeholder="Enter mobile number"
+                  placeholder="10-digit mobile number"
                   disabled={otpSent}
                   required
                 />
               </div>
+              {phone && !phoneValid && (
+                <p className="text-red-300 text-xs mt-1">
+                  Enter a valid 10-digit mobile number
+                </p>
+              )}
             </div>
 
             {!otpSent ? (
               <button
                 type="button"
                 onClick={sendOtp}
-                disabled={loading}
-                className="mt-2 w-full py-3 rounded-xl bg-[#99160B] text-white font-medium flex items-center justify-center disabled:opacity-60"
+                disabled={loading || !phoneValid}
+                className="mt-2 w-full py-3 rounded-xl bg-[#99160B] text-white font-medium flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {loading ? "Sending…" : "Send OTP"}
                 {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
@@ -159,9 +167,9 @@ export default function LoginPage() {
                       type="text"
                       inputMode="numeric"
                       value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
+                      onChange={(e) => setOtp(digitsOnly(e.target.value, 6))}
                       className={inputClass}
-                      placeholder="Enter OTP"
+                      placeholder="Enter 6-digit OTP"
                       maxLength={6}
                       required
                     />
@@ -169,8 +177,8 @@ export default function LoginPage() {
                 </div>
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="mt-2 w-full py-3 rounded-xl bg-[#99160B] text-white font-medium disabled:opacity-60"
+                  disabled={loading || otp.length !== 6}
+                  className="mt-2 w-full py-3 rounded-xl bg-[#99160B] text-white font-medium disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {loading ? "Verifying…" : "Verify & Login"}
                 </button>

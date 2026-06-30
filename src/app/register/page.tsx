@@ -22,7 +22,7 @@ import {
 } from "firebase/auth";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
-import { toE164 } from "@/lib/phone";
+import { toE164, digitsOnly, isValidMobile, isValidEmail } from "@/lib/phone";
 import { useCustomer } from "@/components/CustomerProvider";
 
 const GENDERS = ["Male", "Female", "Other"];
@@ -47,6 +47,13 @@ export default function RegisterPage() {
   const recaptchaRef = useRef<RecaptchaVerifier | null>(null);
   const confirmationRef = useRef<ConfirmationResult | null>(null);
 
+  // Inline validation
+  const nameValid = name.trim().length >= 2;
+  const emailValid = isValidEmail(email);
+  const phoneValid = isValidMobile(phone);
+  const detailsValid =
+    nameValid && emailValid && !!gender && !!ageGroup && phoneValid;
+
   const getRecaptcha = () => {
     if (!recaptchaRef.current) {
       recaptchaRef.current = new RecaptchaVerifier(auth, "recaptcha-container", {
@@ -57,12 +64,12 @@ export default function RegisterPage() {
   };
 
   const handleSendOtp = async () => {
-    if (!name || !email || !gender || !ageGroup) {
-      toast.error("Please fill in all fields first");
-      return;
-    }
+    if (!nameValid) return toast.error("Please enter your full name");
+    if (!emailValid) return toast.error("Please enter a valid email address");
+    if (!gender || !ageGroup)
+      return toast.error("Please select gender and age group");
     const e164 = toE164(phone);
-    if (!e164) {
+    if (!phoneValid || !e164) {
       toast.error("Enter a valid 10-digit mobile number");
       return;
     }
@@ -248,6 +255,11 @@ export default function RegisterPage() {
                   required
                 />
               </div>
+              {email && !emailValid && (
+                <p className="text-red-300 text-xs mt-1">
+                  Enter a valid email address
+                </p>
+              )}
             </div>
 
             {/* Mobile Number */}
@@ -260,22 +272,28 @@ export default function RegisterPage() {
                 <input
                   id="phone"
                   type="tel"
+                  inputMode="numeric"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) => setPhone(digitsOnly(e.target.value, 10))}
                   className={inputClass}
-                  placeholder="Enter mobile number"
+                  placeholder="10-digit mobile number"
                   disabled={otpSent}
                   required
                 />
               </div>
+              {phone && !phoneValid && (
+                <p className="text-red-300 text-xs mt-1">
+                  Enter a valid 10-digit mobile number
+                </p>
+              )}
             </div>
 
             {!otpSent ? (
               <button
                 type="button"
                 onClick={handleSendOtp}
-                disabled={loading}
-                className="mt-4 w-full py-3 rounded-xl bg-[#99160B] text-white font-medium flex items-center justify-center disabled:opacity-60"
+                disabled={loading || !detailsValid}
+                className="mt-4 w-full py-3 rounded-xl bg-[#99160B] text-white font-medium flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {loading ? "Sending…" : "Send OTP"}
                 {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
@@ -293,9 +311,9 @@ export default function RegisterPage() {
                       type="text"
                       inputMode="numeric"
                       value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
+                      onChange={(e) => setOtp(digitsOnly(e.target.value, 6))}
                       className={inputClass}
-                      placeholder="Enter OTP"
+                      placeholder="Enter 6-digit OTP"
                       maxLength={6}
                       required
                     />
@@ -304,8 +322,8 @@ export default function RegisterPage() {
 
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="mt-4 w-full py-3 rounded-xl bg-[#99160B] text-white font-medium disabled:opacity-60"
+                  disabled={loading || otp.length !== 6}
+                  className="mt-4 w-full py-3 rounded-xl bg-[#99160B] text-white font-medium disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {loading ? "Verifying…" : "Verify OTP"}
                 </button>
