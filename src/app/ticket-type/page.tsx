@@ -29,9 +29,19 @@ export default function TicketTypePage() {
       return;
     }
     getTicketTypes(event.eventId)
-      .then(setTypes)
+      .then((fresh) => {
+        setTypes(fresh);
+        // Reconcile any previously-selected ticket (from localStorage) with
+        // fresh Firestore data so a stale cached price can't linger.
+        if (ticketType) {
+          const match = fresh.find((t) => t.id === ticketType.id);
+          if (match) setTicketType(match);
+          else setTicketType(null);
+        }
+      })
       .catch(() => toast.error("Could not load ticket types"))
       .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [event, customer, router]);
 
   const handleContinue = () => {
