@@ -10,7 +10,7 @@ export default function OpsDashboard() {
       <AdminHub
         items={[
           { label: "Book a ticket", description: "Book tickets for customers", href: "/location", icon: Ticket },
-          { label: "View Report", description: "View and download information", href: "/dashboard", icon: Users },
+          { label: "View Report", description: "View and download information", href: "/report", icon: Users },
           { label: "Dashboard", description: "Quick Summaries & Visual Insights at a Glance", href: "/dashboard", icon: BarChart3 },
           { label: "Verify / Check-in", description: "Verify and check-in tickets", href: "/ticket-verification", icon: QrCode },
           { label: "Employee Attendance", description: "View and download employee attendance", href: "/attendance", icon: Users },

@@ -9,7 +9,7 @@ export default function SuperAdminDashboard() {
     <AdminGuard allowedRoles={["Super Admin"]}>
       <AdminHub
         items={[
-          { label: "View Report", description: "View and download information", href: "/dashboard", icon: Users },
+          { label: "View Report", description: "View and download information", href: "/report", icon: Users },
           { label: "Dashboard", description: "Quick Summaries & Visual Insights at a Glance", href: "/dashboard", icon: BarChart3 },
           { label: "Add Slots", description: "Add slots for the locations", href: "/slot-generator", icon: CalendarPlus },
           { label: "Manual Booking", description: "Enter customer info and create ticket", href: "/ticket-booking", icon: ClipboardList },

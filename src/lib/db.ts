@@ -220,6 +220,33 @@ export async function getGiftTicketById(id: string): Promise<GiftTicket | null> 
   return snap.exists() ? ({ id: snap.id, ...snap.data() } as GiftTicket) : null;
 }
 
+export async function getGiftTicketsByDateRange(
+  startDate: string,
+  endDate: string,
+): Promise<GiftTicket[]> {
+  const snap = await getDocs(
+    query(
+      collection(db, "giftTickets"),
+      where("bookingDate", ">=", startDate),
+      where("bookingDate", "<=", endDate),
+      orderBy("bookingDate"),
+    ),
+  );
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as GiftTicket);
+}
+
+/* ----------------------------- reports ----------------------------- */
+
+export async function getAllCustomers(): Promise<Record<string, unknown>[]> {
+  const snap = await getDocs(collection(db, "customers"));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+export async function getAllTicketTypes(): Promise<Record<string, unknown>[]> {
+  const snap = await getDocs(collection(db, "ticketTypes"));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
 /* --------------------------- admin: slots --------------------------- */
 
 /**
