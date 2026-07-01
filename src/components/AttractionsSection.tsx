@@ -126,7 +126,7 @@ const AttractionPair = ({
               : { x: 0, rotate: 0 }
           }
           transition={{ duration: 0.5, delay: pairIndex * 0.3 }}
-          className="absolute left-0 group h-[350px] w-full max-w-[271px] cursor-pointer overflow-hidden rounded-2xl transition-all duration-500 hover:scale-105 z-10"
+          className="absolute left-0 right-0 mx-auto group h-[350px] w-full max-w-[271px] cursor-pointer overflow-hidden rounded-2xl transition-all duration-500 hover:scale-105 z-10"
         >
           <Card attraction={attraction} />
           <div
