@@ -95,6 +95,7 @@ export async function getTicketById(id: string): Promise<Ticket | null> {
 export interface BookingInput {
   uid: string;
   mobile: string;
+  customerName?: string;
   event: EventDoc;
   ticketType: TicketType;
   slot: Slot;
@@ -128,6 +129,7 @@ export async function bookTicket(input: BookingInput): Promise<string> {
     const ticket: Omit<Ticket, "id"> = {
       uid: input.uid,
       mobile: input.mobile,
+      customerName: input.customerName ?? "",
       eventId: input.event.eventId,
       location: input.event.location,
       ticketTypeId: input.ticketType.id,

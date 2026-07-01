@@ -49,6 +49,7 @@ export interface Ticket {
   id: string; // doc id, encoded in the QR code
   uid: string;
   mobile: string;
+  customerName?: string; // set for admin/manual bookings
   eventId: string;
   location: string;
   ticketTypeId: string;
