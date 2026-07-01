@@ -19,6 +19,7 @@ import { slotsForDate } from "./slots";
 import type {
   EventDoc,
   FieldVisit,
+  GiftTicket,
   PaymentOption,
   PaymentStatus,
   Slot,
@@ -158,6 +159,63 @@ export async function checkInTicket(id: string): Promise<Ticket | null> {
   if (!ticket) return null;
   await updateDoc(doc(db, "tickets", id), { isValid: false });
   return { ...ticket, isValid: false };
+}
+
+/* ----------------------------- gift tickets ----------------------------- */
+
+export interface GiftInput {
+  senderUid: string;
+  senderMobile: string;
+  event: EventDoc;
+  ticketType: TicketType;
+  quantity: number;
+  complimentaryTicket: number;
+  totalAmount: number;
+  paymentOption: PaymentOption;
+  paymentStatus: PaymentStatus;
+  receiverName: string;
+  receiverMobile: string;
+  receiverEmail?: string;
+}
+
+/**
+ * Create a gift ticket. Unlike a normal booking there's no slot yet (the
+ * recipient picks one at check-in), so no capacity is decremented. Valid for
+ * 90 days. Returns the new gift ticket id.
+ */
+export async function createGiftTicket(input: GiftInput): Promise<string> {
+  const bookingDate = todayISO();
+  const expiry = new Date();
+  expiry.setDate(expiry.getDate() + 90);
+
+  const ref = await addDoc(collection(db, "giftTickets"), {
+    senderUid: input.senderUid,
+    senderMobile: input.senderMobile,
+    receiverName: input.receiverName,
+    receiverMobile: input.receiverMobile,
+    receiverEmail: input.receiverEmail ?? "",
+    eventId: input.event.eventId,
+    location: input.event.location,
+    ticketTypeId: input.ticketType.id,
+    typeName: input.ticketType.typeName,
+    quantity: input.quantity,
+    complimentaryTicket: input.complimentaryTicket,
+    totalAmount: input.totalAmount,
+    gstAmount: gstInclusive(input.totalAmount),
+    paymentOption: input.paymentOption,
+    paymentStatus: input.paymentStatus,
+    bookingDate,
+    expiryDate: expiry.toISOString().slice(0, 10),
+    isValid: true,
+    slotId: null,
+    createdAt: serverTimestamp(),
+  });
+  return ref.id;
+}
+
+export async function getGiftTicketById(id: string): Promise<GiftTicket | null> {
+  const snap = await getDoc(doc(db, "giftTickets", id));
+  return snap.exists() ? ({ id: snap.id, ...snap.data() } as GiftTicket) : null;
 }
 
 /* --------------------------- admin: slots --------------------------- */

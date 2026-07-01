@@ -17,6 +17,7 @@ export default function QuantityPage() {
   const {
     event,
     ticketType,
+    isGift,
     quantity,
     setQuantity,
     setComplimentaryTickets,
@@ -42,7 +43,8 @@ export default function QuantityPage() {
   const proceed = () => {
     setComplimentaryTickets(comp);
     setHasTourGuide(tourGuide);
-    router.push("/date-selection");
+    // Gift tickets have no fixed slot — the recipient books it at check-in.
+    router.push(isGift ? "/payment" : "/date-selection");
   };
 
   return (

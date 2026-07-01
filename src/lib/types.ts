@@ -67,6 +67,29 @@ export interface Ticket {
   adminId?: string | null;
 }
 
+export interface GiftTicket {
+  id: string; // doc id, encoded in the QR (prefixed so it's distinguishable)
+  senderUid: string;
+  senderMobile: string;
+  receiverName: string;
+  receiverMobile: string;
+  receiverEmail?: string;
+  eventId: string;
+  location: string;
+  ticketTypeId: string;
+  typeName: string;
+  quantity: number;
+  complimentaryTicket: number;
+  totalAmount: number;
+  gstAmount: number;
+  paymentOption: PaymentOption;
+  paymentStatus: PaymentStatus;
+  bookingDate: string; // "YYYY-MM-DD"
+  expiryDate: string; // 90 days after booking
+  isValid: boolean; // false after check-in
+  slotId?: string | null; // assigned when the recipient checks in
+}
+
 export interface AdminDoc {
   uid: string;
   email: string;
