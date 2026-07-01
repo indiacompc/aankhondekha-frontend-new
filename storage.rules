@@ -1,0 +1,25 @@
+rules_version = '2';
+
+// Aankhon Dekha — Firebase Storage rules.
+// Publish in Firebase Console → Storage → Rules, or via the Firebase CLI
+// (`firebase deploy --only storage`).
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Attendance photos: any signed-in user may upload (field employees sign in
+    // anonymously). Reads are via download-token URLs from Firestore records.
+    match /fieldVisits/{file=**} {
+      allow write: if request.auth != null
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow read: if true;
+    }
+
+    // Hosted media (videos) uploaded by the admin SDK; public read.
+    match /media/{file=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import {
+  addDoc,
   collection,
   doc,
   getDoc,
@@ -11,11 +12,13 @@ import {
   where,
   writeBatch,
 } from "firebase/firestore";
-import { db } from "./firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db, storage } from "./firebase";
 import { gstInclusive, todayISO } from "./booking";
 import { slotsForDate } from "./slots";
 import type {
   EventDoc,
+  FieldVisit,
   PaymentOption,
   PaymentStatus,
   Slot,
@@ -207,4 +210,45 @@ export async function getTicketsByDateRange(
     ),
   );
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Ticket);
+}
+
+/* --------------------------- field visits --------------------------- */
+
+export type FieldVisitInput = Omit<FieldVisit, "id" | "photoUrl" | "timestamp">;
+
+/** Upload the attendance photo to Storage, then write the field-visit record. */
+export async function createFieldVisit(
+  input: FieldVisitInput,
+  photo: File,
+): Promise<string> {
+  const stamp = new Date().toISOString();
+  const path = `fieldVisits/${stamp.replace(/[:.]/g, "-")}-${input.employeeMobile}.jpg`;
+  const snap = await uploadBytes(ref(storage, path), photo, {
+    contentType: photo.type || "image/jpeg",
+  });
+  const photoUrl = await getDownloadURL(snap.ref);
+
+  const docRef = await addDoc(collection(db, "fieldVisits"), {
+    ...input,
+    photoUrl,
+    timestamp: stamp,
+    createdAt: serverTimestamp(),
+  });
+  return docRef.id;
+}
+
+/** Field-visit records within an inclusive date range (newest first). */
+export async function getFieldVisitsByDateRange(
+  startDate: string,
+  endDate: string,
+): Promise<FieldVisit[]> {
+  const snap = await getDocs(
+    query(
+      collection(db, "fieldVisits"),
+      where("timestamp", ">=", `${startDate}T00:00:00`),
+      where("timestamp", "<=", `${endDate}T23:59:59`),
+      orderBy("timestamp", "desc"),
+    ),
+  );
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as FieldVisit);
 }

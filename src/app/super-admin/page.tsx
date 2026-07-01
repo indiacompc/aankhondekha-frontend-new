@@ -1,6 +1,6 @@
 "use client";
 
-import { QrCode, Ticket, CalendarPlus, BarChart3 } from "lucide-react";
+import { QrCode, Ticket, CalendarPlus, BarChart3, Users } from "lucide-react";
 import { AdminGuard } from "@/components/AdminGuard";
 import { AdminHub } from "@/components/AdminHub";
 
@@ -11,6 +11,7 @@ export default function SuperAdminDashboard() {
         title="Super Admin"
         items={[
           { label: "Dashboard", href: "/dashboard", icon: BarChart3 },
+          { label: "Attendance", href: "/attendance", icon: Users },
           { label: "Generate Slots", href: "/slot-generator", icon: CalendarPlus },
           { label: "Verify / Check-in Ticket", href: "/ticket-verification", icon: QrCode },
           { label: "Book a Ticket", href: "/location", icon: Ticket },

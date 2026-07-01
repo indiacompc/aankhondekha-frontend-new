@@ -73,3 +73,19 @@ export interface AdminDoc {
   role: AdminRole;
   eventId?: string | null; // assigned location (Reception Admin)
 }
+
+export interface FieldVisit {
+  id: string;
+  employeeName: string;
+  employeeMobile: string;
+  latitude: number;
+  longitude: number;
+  category: string; // "check-in" | "check-out"
+  photoUrl: string;
+  isFieldVisit: boolean;
+  customerName?: string;
+  customerAddress?: string;
+  pincode?: string;
+  notes?: string;
+  timestamp: string; // ISO datetime
+}

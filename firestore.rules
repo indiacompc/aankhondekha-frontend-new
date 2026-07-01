@@ -58,5 +58,12 @@ service cloud.firestore {
       allow read: if signedIn() && request.auth.uid == uid;
       allow write: if false;
     }
+
+    // Field-visit / attendance records: any signed-in user (employees sign in
+    // anonymously) may create; only admins may read the report.
+    match /fieldVisits/{id} {
+      allow create: if signedIn();
+      allow read: if isAdmin();
+    }
   }
 }
