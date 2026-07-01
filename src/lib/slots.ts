@@ -15,9 +15,7 @@ export interface SlotPattern {
 
 export const SLOT_PATTERNS: Record<string, SlotPattern> = {
   "1": { startMin: 9 * 60, endMin: 22 * 60, intervalMin: 15, capacity: 6 },
-  "2": { startMin: 11 * 60, endMin: 18 * 60, intervalMin: 60, capacity: 20 },
   "3": { startMin: 12 * 60, endMin: 22 * 60, intervalMin: 15, capacity: 10 },
-  "4": { startMin: 10 * 60, endMin: 18 * 60, intervalMin: 60, capacity: 10 },
 };
 
 export function fmtTime(minutes: number): string {

@@ -40,9 +40,7 @@ const auth = getAuth();
 
 const EVENTS = [
   { eventId: "1", location: "Orchha" },
-  { eventId: "2", location: "Bhopal" },
   { eventId: "3", location: "Bhopal Boat Club" },
-  { eventId: "4", location: "Maheshwar" },
 ];
 
 // Sample ticket types per event. `price` is the FINAL, GST-inclusive price the
@@ -50,18 +48,13 @@ const EVENTS = [
 // discount. Edit these to your real prices.
 const TICKET_TYPES = [
   { typeName: "Immersive VR", eventId: "1", durationMinutes: 10, price: 99, originalPrice: 220, description: "of pure VR experience", offer: "GROUP OFFER Buy 4, Get 1 FREE!", note: "Offer Valid Till 31st May! Hurry Up!" },
-  { typeName: "Immersive VR", eventId: "2", durationMinutes: 10, price: 99, originalPrice: 220, description: "of pure VR experience", offer: "GROUP OFFER Buy 4, Get 1 FREE!", note: "Offer Valid Till 31st May! Hurry Up!" },
-  { typeName: "Premium VR + Guide", eventId: "2", durationMinutes: 30, price: 299, originalPrice: 450, description: "premium guided experience" },
   { typeName: "Immersive VR", eventId: "3", durationMinutes: 10, price: 129, originalPrice: 220, description: "water-sports VR experience" },
-  { typeName: "Immersive VR", eventId: "4", durationMinutes: 10, price: 99, originalPrice: 220, description: "Narmada riverfront VR experience" },
 ];
 
 // Slot generation patterns per event.
 const SLOT_PATTERNS = {
   1: { startMin: 9 * 60, endMin: 22 * 60, intervalMin: 15, capacity: 6 },
-  2: { startMin: 11 * 60, endMin: 18 * 60, intervalMin: 60, capacity: 20 },
   3: { startMin: 12 * 60, endMin: 22 * 60, intervalMin: 15, capacity: 10 },
-  4: { startMin: 10 * 60, endMin: 18 * 60, intervalMin: 60, capacity: 10 },
 };
 
 const SUPER_ADMIN = {
