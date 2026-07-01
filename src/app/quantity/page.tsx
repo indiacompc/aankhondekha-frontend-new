@@ -10,6 +10,7 @@ import {
   hasTourGuide as computeTourGuide,
   maxQuantityFor,
   totalFor,
+  withGst,
 } from "@/lib/booking";
 
 export default function QuantityPage() {
@@ -67,7 +68,8 @@ export default function QuantityPage() {
           <div>
             <p className="font-semibold">{ticketType.typeName}</p>
             <p className="text-white/70 text-sm">
-              {event.location} · ₹{ticketType.price} each
+              {event.location} · ₹{withGst(ticketType.price).toFixed(2)} each
+              (incl. GST)
             </p>
           </div>
 
@@ -105,7 +107,7 @@ export default function QuantityPage() {
           )}
 
           <div className="border-t border-white/15 pt-4 flex justify-between">
-            <span className="text-white/80">Total ({quantity} paid)</span>
+            <span className="text-white/80">Total ({quantity} paid, incl. GST)</span>
             <span className="font-bold text-lg">₹{total}</span>
           </div>
 

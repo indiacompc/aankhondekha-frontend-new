@@ -8,9 +8,29 @@
 
 export const GST_RATE = 0.18;
 
-/** GST portion of a GST-inclusive total: total * 18/118. */
+/**
+ * Pricing model (matches the original app):
+ *   ticket `price` is the PRE-GST base. 18% GST is added on top.
+ *   subtotal = price × qty · taxes = subtotal × 18% · total = subtotal + taxes.
+ */
+
+/** GST portion of a GST-inclusive total: total * 18/118 (== subtotal × 18%). */
 export function gstInclusive(total: number): number {
   return Math.round(((total * GST_RATE) / (1 + GST_RATE)) * 100) / 100;
+}
+
+/** Per-ticket price including 18% GST (used for the struck-through comparison). */
+export function withGst(price: number): number {
+  return Math.round(price * (1 + GST_RATE) * 100) / 100;
+}
+
+export function subtotalFor(price: number, quantity: number): number {
+  return Math.round(price * quantity * 100) / 100;
+}
+
+/** 18% tax on a subtotal. */
+export function taxesFor(subtotal: number): number {
+  return Math.round(subtotal * GST_RATE);
 }
 
 export function complimentaryFor(quantity: number): number {
@@ -27,9 +47,10 @@ export function hasTourGuide(eventId: string, quantity: number): boolean {
   return eventId === "2" && quantity >= 10;
 }
 
-/** Total payable for a paid booking (price already GST-inclusive). */
+/** Total payable = (price × qty) + 18% GST, rounded. */
 export function totalFor(price: number, quantity: number): number {
-  return Math.round(price * quantity * 100) / 100;
+  const subtotal = price * quantity;
+  return Math.round(subtotal + subtotal * GST_RATE);
 }
 
 export function todayISO(): string {

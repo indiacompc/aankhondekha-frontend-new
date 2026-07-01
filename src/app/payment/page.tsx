@@ -6,7 +6,13 @@ import { motion } from "framer-motion";
 import { ArrowLeft, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import { bookTicket } from "@/lib/db";
-import { gstInclusive, todayISO, totalFor } from "@/lib/booking";
+import {
+  subtotalFor,
+  taxesFor,
+  todayISO,
+  totalFor,
+  withGst,
+} from "@/lib/booking";
 import { useBooking } from "@/components/BookingProvider";
 import { useCustomer } from "@/components/CustomerProvider";
 
@@ -24,8 +30,15 @@ export default function PaymentPage() {
 
   if (!event || !ticketType || !slot || !date || !customer) return null;
 
+  const subtotal = subtotalFor(ticketType.price, quantity);
+  const taxes = taxesFor(subtotal);
   const total = totalFor(ticketType.price, quantity);
-  const gst = gstInclusive(total);
+  const savings =
+    ticketType.originalPrice && ticketType.originalPrice > withGst(ticketType.price)
+      ? Math.round(
+          (ticketType.originalPrice - withGst(ticketType.price)) * quantity,
+        )
+      : 0;
 
   const pay = async () => {
     setProcessing(true);
@@ -95,10 +108,18 @@ export default function PaymentPage() {
           {complimentaryTickets > 0 &&
             row("Complimentary", `+${complimentaryTickets}`)}
           <div className="border-t border-white/15 my-2" />
-          {row("GST (18% incl.)", `₹${gst}`)}
+          {row("Ticket Price", `₹${withGst(ticketType.price).toFixed(2)} x ${quantity}`)}
+          {row("Subtotal", `₹${subtotal.toLocaleString()}`)}
+          {row("Taxes (18%)", `₹${taxes.toLocaleString()}`)}
+          {savings > 0 && (
+            <div className="flex justify-between text-sm text-yellow-300">
+              <span>You save</span>
+              <span>₹{savings.toLocaleString()}</span>
+            </div>
+          )}
           <div className="flex justify-between font-bold text-lg">
             <span>Total</span>
-            <span>₹{total}</span>
+            <span className="text-[#96FF00]">₹{total.toLocaleString()}</span>
           </div>
 
           <div className="mt-4 rounded-lg bg-[#96FF00]/10 text-[#96FF00] text-xs p-3">

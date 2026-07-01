@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Clock, Ticket as TicketIcon } from "lucide-react";
 import { toast } from "sonner";
 import { getTicketTypes } from "@/lib/db";
+import { withGst } from "@/lib/booking";
 import type { TicketType } from "@/lib/types";
 import { useBooking } from "@/components/BookingProvider";
 import { useCustomer } from "@/components/CustomerProvider";
@@ -75,16 +76,24 @@ export default function TicketTypePage() {
                     <span className="text-lg font-semibold">{t.typeName}</span>
                   </div>
                   <div className="text-right">
-                    {t.originalPrice && t.originalPrice > t.price && (
-                      <span className="text-white/50 line-through text-sm mr-1">
-                        ₹{t.originalPrice}
+                    {t.originalPrice && t.originalPrice > withGst(t.price) && (
+                      <span className="text-red-400 line-through text-sm mr-1">
+                        ₹{t.originalPrice.toFixed(2)}
                       </span>
                     )}
                     <span className="text-[#96FF00] font-bold text-lg">
-                      ₹{t.price}
+                      ₹{withGst(t.price).toFixed(2)}
                     </span>
                   </div>
                 </div>
+                <p className="text-[10px] text-white/60 text-right -mt-1">
+                  Price includes 18% GST
+                </p>
+                {t.originalPrice && t.originalPrice > withGst(t.price) && (
+                  <p className="text-yellow-300 text-xs font-medium text-right">
+                    Save ₹{(t.originalPrice - withGst(t.price)).toFixed(2)}!
+                  </p>
+                )}
                 {t.description && (
                   <p className="text-white/80 text-sm mt-2">{t.description}</p>
                 )}
