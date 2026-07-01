@@ -3,7 +3,11 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowLeft, Minus, Plus, Gift } from "lucide-react";
+import { Minus, Plus, Gift, Info } from "lucide-react";
+import { toast } from "sonner";
+import BackButton from "@/components/BackButton";
+import GlassCard from "@/components/GlassCard";
+import PageTransition from "@/components/PageTransition";
 import { useBooking } from "@/components/BookingProvider";
 import {
   complimentaryFor,
@@ -33,92 +37,130 @@ export default function QuantityPage() {
   const max = maxQuantityFor(event.eventId);
   const comp = complimentaryFor(quantity);
   const tourGuide = computeTourGuide(event.eventId, quantity);
-  const total = totalFor(ticketType.price, quantity);
+  const ticketPrice = ticketType.price;
+  const totalPrice = totalFor(ticketPrice, quantity);
 
-  const change = (delta: number) => {
-    const next = Math.min(max, Math.max(1, quantity + delta));
+  const increment = () => {
+    if (quantity >= max) return;
+    const next = quantity + 1;
+    const newComp = complimentaryFor(next);
+    if (newComp > comp) toast.success(`🎉 You got ${newComp - comp} free ticket(s)!`);
+    if (event.eventId === "2" && next >= 10 && !tourGuide)
+      toast.info("🎉 You unlocked a free 30-minute tour guide!");
     setQuantity(next);
   };
 
-  const proceed = () => {
+  const decrement = () => {
+    if (quantity <= 1) return;
+    setQuantity(quantity - 1);
+  };
+
+  const handleContinue = () => {
     setComplimentaryTickets(comp);
     setHasTourGuide(tourGuide);
-    // Gift tickets have no fixed slot — the recipient books it at check-in.
     router.push(isGift ? "/payment" : "/date-selection");
   };
 
   return (
-    <div className="min-h-screen bg-[#121212] p-6">
-      <div className="max-w-md mx-auto">
+    <PageTransition>
+      <div className="bg-[#121212] min-h-screen flex flex-col px-4 py-6">
         <div className="mb-6 flex items-center">
-          <button
-            onClick={() => router.push("/ticket-type")}
-            className="w-10 h-10 rounded-full bg-white/80 flex items-center justify-center shadow-md"
-            aria-label="Back"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <h1 className="ml-5 font-bold text-[24px] text-white">Quantity</h1>
+          <BackButton />
+          <h1 className="font-aileron ml-5 font-bold text-[24px] leading-[110%] text-white">
+            Select Quantity
+          </h1>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-[#595959] rounded-xl p-6 shadow-lg text-white space-y-6"
-        >
-          <div>
-            <p className="font-semibold">{ticketType.typeName}</p>
-            <p className="text-white/70 text-sm">
-              {event.location} · ₹{ticketType.price.toFixed(2)} each (incl. GST)
+        <div className="inline-block px-3 py-1 rounded-full bg-[#99160B] text-sm text-white mb-6 w-fit">
+          Choose number of tickets required
+        </div>
+
+        <GlassCard className="mb-6">
+          <div className="flex flex-col items-center">
+            <h3 className="text-lg font-medium mb-6 text-white">Number of Tickets</h3>
+
+            <div className="flex items-center justify-center space-x-4 mb-6">
+              <button
+                onClick={decrement}
+                disabled={quantity <= 1}
+                className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
+                  quantity <= 1
+                    ? "bg-[#595959] text-white/40"
+                    : "bg-[#330D0A] text-[#99160B] hover:bg-[#4a1310]"
+                }`}
+              >
+                <Minus className="h-5 w-5" />
+              </button>
+
+              <div className="w-16 h-16 font-aileron rounded-full bg-[#595959] text-white flex items-center justify-center text-[32px] font-bold">
+                {quantity}
+              </div>
+
+              <button
+                onClick={increment}
+                disabled={quantity >= max}
+                className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
+                  quantity >= max
+                    ? "bg-[#595959] text-white/40 cursor-not-allowed"
+                    : "bg-[#1E3300] text-[#96FF00] hover:bg-[#2a4700]"
+                }`}
+              >
+                <Plus className="h-5 w-5" />
+              </button>
+            </div>
+
+            {comp > 0 && (
+              <div className="mt-4 flex text-[#96FF00] mb-5 items-center text-lg font-semibold">
+                <Gift className="mr-2 text-[#96FF00]" /> You&apos;ve Received {comp}{" "}
+                free ticket(s)!
+              </div>
+            )}
+
+            {tourGuide && (
+              <div className="mt-4 flex items-center text-white mb-5 text-lg font-semibold">
+                <Info className="mr-2" /> 🎉 You unlocked a free 30-minute tour
+                guide
+              </div>
+            )}
+
+            <div className="w-full pt-4 border-t border-white/20">
+              <div className="flex justify-between mb-2">
+                <span className="text-white">Price per ticket:</span>
+                <span className="text-white">
+                  ₹{ticketPrice.toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between text-white text-lg font-semibold">
+                <span>Total:</span>
+                <span className="text-white">₹{totalPrice.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+        </GlassCard>
+
+        {isGift && (
+          <GlassCard className="mb-6">
+            <h3 className="text-lg font-medium text-white mb-4">
+              Gift Information
+            </h3>
+            <p className="text-sm text-white mb-4">
+              Your gift recipient will be able to choose their preferred date
+              within the next 3 months.
             </p>
-          </div>
-
-          <div className="flex items-center justify-center gap-6">
-            <button
-              onClick={() => change(-1)}
-              className="w-12 h-12 rounded-full bg-[#99160B] flex items-center justify-center disabled:opacity-40"
-              disabled={quantity <= 1}
-              aria-label="Decrease"
-            >
-              <Minus className="w-5 h-5" />
-            </button>
-            <span className="text-3xl font-bold w-12 text-center">{quantity}</span>
-            <button
-              onClick={() => change(1)}
-              className="w-12 h-12 rounded-full bg-[#99160B] flex items-center justify-center disabled:opacity-40"
-              disabled={quantity >= max}
-              aria-label="Increase"
-            >
-              <Plus className="w-5 h-5" />
-            </button>
-          </div>
-          <p className="text-center text-xs text-white/50">Max {max} per booking</p>
-
-          {comp > 0 && (
-            <div className="flex items-center gap-2 text-[#96FF00] text-sm">
-              <Gift className="w-4 h-4" />
-              {comp} complimentary ticket{comp > 1 ? "s" : ""} (Buy 4 Get 1 Free)
+            <div className="text-sm bg-[#2C410E] text-[#96FF00] p-3 rounded-lg">
+              Recipient details will be collected in the next step
             </div>
-          )}
-          {tourGuide && (
-            <div className="text-sm text-[#96FF00]">
-              + Free 30-min tour guide included
-            </div>
-          )}
+          </GlassCard>
+        )}
 
-          <div className="border-t border-white/15 pt-4 flex justify-between">
-            <span className="text-white/80">Total ({quantity} paid, incl. GST)</span>
-            <span className="font-bold text-lg">₹{total}</span>
-          </div>
-
-          <button
-            onClick={proceed}
-            className="w-full py-3 rounded-xl bg-[#99160B] text-white font-medium"
-          >
-            Continue
-          </button>
-        </motion.div>
+        <motion.button
+          onClick={handleContinue}
+          className="w-full py-3 rounded-lg bg-[#99160B] text-white font-medium"
+          whileTap={{ scale: 0.98 }}
+        >
+          Continue
+        </motion.button>
       </div>
-    </div>
+    </PageTransition>
   );
 }

@@ -3,18 +3,23 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { Clock, Check } from "lucide-react";
 import { toast } from "sonner";
+import BackButton from "@/components/BackButton";
+import GlassCard from "@/components/GlassCard";
+import PageTransition from "@/components/PageTransition";
 import { getSlots } from "@/lib/db";
 import type { Slot } from "@/lib/types";
 import { useBooking } from "@/components/BookingProvider";
 
 export default function SlotSelection() {
   const router = useRouter();
-  const { event, ticketType, date, quantity, complimentaryTickets, setSlot } =
+  const { event, ticketType, date, quantity, complimentaryTickets, slot, setSlot } =
     useBooking();
   const [slots, setSlots] = useState<Slot[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedId, setSelectedId] = useState<string | null>(slot?.id ?? null);
 
   const needed = quantity + complimentaryTickets;
 
@@ -29,73 +34,103 @@ export default function SlotSelection() {
       .finally(() => setLoading(false));
   }, [event, ticketType, date, router]);
 
-  const choose = (slot: Slot) => {
-    if (slot.availableSeats < needed) {
-      toast.error(`Only ${slot.availableSeats} seats left in this slot`);
+  const handleContinue = () => {
+    const chosen = slots.find((s) => s.id === selectedId);
+    if (!chosen) return;
+    if (chosen.availableSeats < needed) {
+      toast.error(`Only ${chosen.availableSeats} seats left in this slot`);
       return;
     }
-    setSlot(slot);
+    setSlot(chosen);
     router.push("/payment");
   };
 
   if (!event || !date) return null;
 
   return (
-    <div className="min-h-screen bg-[#121212] p-6">
-      <div className="max-w-md mx-auto">
-        <div className="mb-2 flex items-center">
-          <button
-            onClick={() => router.push("/date-selection")}
-            className="w-10 h-10 rounded-full bg-white/80 flex items-center justify-center shadow-md"
-            aria-label="Back"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <h1 className="ml-5 font-bold text-[24px] text-white">Select Slot</h1>
+    <PageTransition>
+      <div className="bg-[#121212] min-h-screen flex flex-col px-4 py-6 pb-24">
+        <div className="mb-6 flex items-center">
+          <BackButton />
+          <h1 className="font-aileron ml-5 font-bold text-[24px] leading-[110%] text-white">
+            Select Time Slot
+          </h1>
         </div>
-        <p className="text-white/60 text-sm mb-6 ml-[60px]">
-          {event.location} ·{" "}
-          {new Date(date).toLocaleDateString("en-US", {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-          })}
-        </p>
+
+        <div className="inline-flex items-center w-fit px-3 py-1 rounded-full bg-[#99160B] text-sm text-white mb-6">
+          <Clock className="h-5 w-5 mr-1" />
+          <span>Choose your preferred time</span>
+        </div>
+
+        <div className="mb-6">
+          <h2 className="text-lg text-white ml-5 font-medium mb-2">
+            {format(parseISO(date), "EEEE, MMMM d, yyyy")}
+          </h2>
+          <p className="text-sm text-white/70 ml-5">
+            Please select an available time slot
+          </p>
+        </div>
 
         {loading ? (
-          <p className="text-white/70">Loading slots…</p>
-        ) : slots.length === 0 ? (
-          <p className="text-white/70">
-            No slots available for this date. Try another date.
-          </p>
-        ) : (
-          <div className="grid grid-cols-2 gap-3">
-            {slots.map((s, i) => {
-              const enough = s.availableSeats >= needed;
+          <p className="text-center text-gray-400">Loading slots…</p>
+        ) : slots.length > 0 ? (
+          <div className="grid grid-cols-2 gap-2 mb-8">
+            {slots.map((s, index) => {
+              const selected = selectedId === s.id;
               return (
-                <motion.button
+                <GlassCard
                   key={s.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2, delay: i * 0.02 }}
-                  onClick={() => choose(s)}
-                  disabled={!enough}
-                  className={`rounded-xl p-3 text-center shadow-lg transition-colors ${
-                    enough
-                      ? "bg-[#595959] text-white hover:bg-[#666]"
-                      : "bg-[#3a3a3a] text-white/40 cursor-not-allowed"
+                  delay={index}
+                  className={`cursor-pointer transition-all duration-300 ${
+                    selected ? "border-[#96FF00] border-2" : "hover:bg-[#2C410E]"
                   }`}
+                  onClick={() => setSelectedId(s.id)}
                 >
-                  <div className="text-sm font-semibold">{s.slotTime}</div>
-                  <div className="text-xs mt-1 text-[#96FF00]">
-                    {s.availableSeats} seats left
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <span className="text-lg text-white">{s.slotTime}</span>
+                      <span className="text-sm text-white">
+                        {s.availableSeats} seats left
+                      </span>
+                    </div>
+                    {selected && (
+                      <div className="w-6 h-6 rounded-full bg-[#96FF00] flex items-center justify-center">
+                        <Check className="h-4 w-4 text-black" />
+                      </div>
+                    )}
                   </div>
-                </motion.button>
+                </GlassCard>
               );
             })}
           </div>
+        ) : (
+          <GlassCard className="mb-8 text-center py-8">
+            <h3 className="text-lg font-medium mb-4 text-white">
+              No Available Slots
+            </h3>
+            <p className="text-white/70 mb-6">
+              Sorry, all slots for this date are fully booked.
+            </p>
+            <button
+              onClick={() => router.push("/date-selection")}
+              className="inline-flex py-2 px-5 rounded-lg bg-[#99160B] text-white"
+            >
+              Select Another Date
+            </button>
+          </GlassCard>
         )}
+
+        <motion.button
+          onClick={handleContinue}
+          disabled={!selectedId}
+          className={`fixed bottom-0 left-0 right-0 py-4 bg-[#99160B] text-white font-medium ${
+            !selectedId ? "opacity-50 cursor-not-allowed" : ""
+          }`}
+          whileTap={{ scale: selectedId ? 0.98 : 1 }}
+        >
+          Continue to Payment
+        </motion.button>
       </div>
-    </div>
+    </PageTransition>
   );
 }
