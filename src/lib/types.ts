@@ -30,6 +30,7 @@ export interface TicketType {
   originalPrice?: number;
   description?: string;
   offer?: string;
+  note?: string;
   note1?: string;
   note2?: string;
   note3?: string;
