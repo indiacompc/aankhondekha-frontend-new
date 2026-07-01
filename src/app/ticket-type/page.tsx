@@ -6,7 +6,6 @@ import { motion } from "framer-motion";
 import { Check, Ticket as TicketIcon, Gift } from "lucide-react";
 import { toast } from "sonner";
 import { getTicketTypes } from "@/lib/db";
-import { withGst } from "@/lib/booking";
 import type { TicketType } from "@/lib/types";
 import { useBooking } from "@/components/BookingProvider";
 import { useCustomer } from "@/components/CustomerProvider";
@@ -67,7 +66,7 @@ export default function TicketTypePage() {
         ) : (
           types.map((t, i) => {
             const selected = ticketType?.id === t.id;
-            const price = withGst(t.price);
+            const price = t.price;
             const hasDiscount = !!t.originalPrice && t.originalPrice > price;
             return (
               <motion.div

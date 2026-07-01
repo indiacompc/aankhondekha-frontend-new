@@ -9,28 +9,20 @@
 export const GST_RATE = 0.18;
 
 /**
- * Pricing model (matches the original app):
- *   ticket `price` is the PRE-GST base. 18% GST is added on top.
- *   subtotal = price × qty · taxes = subtotal × 18% · total = subtotal + taxes.
+ * Pricing model (matches the live site):
+ *   ticket `price` is the FINAL, GST-inclusive price shown to the customer.
+ *   The 18% GST is the *included* portion: gst = total × 18/118.
+ *   `originalPrice` is the struck-through MRP used to show the discount.
  */
 
-/** GST portion of a GST-inclusive total: total * 18/118 (== subtotal × 18%). */
+/** GST portion included within a GST-inclusive total: total × 18/118. */
 export function gstInclusive(total: number): number {
   return Math.round(((total * GST_RATE) / (1 + GST_RATE)) * 100) / 100;
 }
 
-/** Per-ticket price including 18% GST (used for the struck-through comparison). */
-export function withGst(price: number): number {
-  return Math.round(price * (1 + GST_RATE) * 100) / 100;
-}
-
-export function subtotalFor(price: number, quantity: number): number {
-  return Math.round(price * quantity * 100) / 100;
-}
-
-/** 18% tax on a subtotal. */
-export function taxesFor(subtotal: number): number {
-  return Math.round(subtotal * GST_RATE);
+/** Taxable (ex-GST) portion of a GST-inclusive total. */
+export function exGst(total: number): number {
+  return Math.round((total - gstInclusive(total)) * 100) / 100;
 }
 
 export function complimentaryFor(quantity: number): number {
@@ -47,10 +39,9 @@ export function hasTourGuide(eventId: string, quantity: number): boolean {
   return eventId === "2" && quantity >= 10;
 }
 
-/** Total payable = (price × qty) + 18% GST, rounded. */
+/** Total payable = final price × qty (price already GST-inclusive). */
 export function totalFor(price: number, quantity: number): number {
-  const subtotal = price * quantity;
-  return Math.round(subtotal + subtotal * GST_RATE);
+  return Math.round(price * quantity * 100) / 100;
 }
 
 export function todayISO(): string {

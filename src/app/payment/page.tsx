@@ -6,13 +6,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import { bookTicket } from "@/lib/db";
-import {
-  subtotalFor,
-  taxesFor,
-  todayISO,
-  totalFor,
-  withGst,
-} from "@/lib/booking";
+import { exGst, gstInclusive, todayISO, totalFor } from "@/lib/booking";
 import { useBooking } from "@/components/BookingProvider";
 import { useCustomer } from "@/components/CustomerProvider";
 
@@ -30,14 +24,12 @@ export default function PaymentPage() {
 
   if (!event || !ticketType || !slot || !date || !customer) return null;
 
-  const subtotal = subtotalFor(ticketType.price, quantity);
-  const taxes = taxesFor(subtotal);
   const total = totalFor(ticketType.price, quantity);
+  const taxes = gstInclusive(total); // GST included within the total
+  const subtotal = exGst(total); // taxable value (ex-GST)
   const savings =
-    ticketType.originalPrice && ticketType.originalPrice > withGst(ticketType.price)
-      ? Math.round(
-          (ticketType.originalPrice - withGst(ticketType.price)) * quantity,
-        )
+    ticketType.originalPrice && ticketType.originalPrice > ticketType.price
+      ? Math.round((ticketType.originalPrice - ticketType.price) * quantity)
       : 0;
 
   const pay = async () => {
@@ -108,9 +100,9 @@ export default function PaymentPage() {
           {complimentaryTickets > 0 &&
             row("Complimentary", `+${complimentaryTickets}`)}
           <div className="border-t border-white/15 my-2" />
-          {row("Ticket Price", `₹${withGst(ticketType.price).toFixed(2)} x ${quantity}`)}
-          {row("Subtotal", `₹${subtotal.toLocaleString()}`)}
-          {row("Taxes (18%)", `₹${taxes.toLocaleString()}`)}
+          {row("Ticket Price", `₹${ticketType.price.toFixed(2)} x ${quantity}`)}
+          {row("Subtotal (ex-GST)", `₹${subtotal.toLocaleString()}`)}
+          {row("GST (18% incl.)", `₹${taxes.toLocaleString()}`)}
           {savings > 0 && (
             <div className="flex justify-between text-sm text-yellow-300">
               <span>You save</span>

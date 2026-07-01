@@ -45,15 +45,15 @@ const EVENTS = [
   { eventId: "4", location: "Maheshwar" },
 ];
 
-// Sample ticket types per event. `price` is the PRE-GST base (18% GST is added
-// at checkout). `originalPrice` is the struck-through MRP (GST-inclusive) used
-// to show a discount. Edit to match reality.
+// Sample ticket types per event. `price` is the FINAL, GST-inclusive price the
+// customer pays. `originalPrice` is the struck-through MRP used to show the
+// discount. Edit these to your real prices.
 const TICKET_TYPES = [
-  { typeName: "VR Experience", eventId: "1", durationMinutes: 15, price: 100, originalPrice: 150, description: "360° immersive VR walkthrough." },
-  { typeName: "VR Experience", eventId: "2", durationMinutes: 60, price: 150, originalPrice: 220, description: "Full museum VR experience.", offer: "Buy 4 Get 1 Free" },
-  { typeName: "Premium VR + Guide", eventId: "2", durationMinutes: 90, price: 250, originalPrice: 350, description: "Premium experience with a guide." },
-  { typeName: "VR Experience", eventId: "3", durationMinutes: 15, price: 120, originalPrice: 180, description: "Water-sports VR experience." },
-  { typeName: "VR Experience", eventId: "4", durationMinutes: 30, price: 100, originalPrice: 150, description: "Narmada riverfront VR experience." },
+  { typeName: "Immersive VR", eventId: "1", durationMinutes: 10, price: 99, originalPrice: 220, description: "of pure VR experience", offer: "GROUP OFFER Buy 4, Get 1 FREE!", note: "Offer Valid Till 31st May! Hurry Up!" },
+  { typeName: "Immersive VR", eventId: "2", durationMinutes: 10, price: 99, originalPrice: 220, description: "of pure VR experience", offer: "GROUP OFFER Buy 4, Get 1 FREE!", note: "Offer Valid Till 31st May! Hurry Up!" },
+  { typeName: "Premium VR + Guide", eventId: "2", durationMinutes: 30, price: 299, originalPrice: 450, description: "premium guided experience" },
+  { typeName: "Immersive VR", eventId: "3", durationMinutes: 10, price: 129, originalPrice: 220, description: "water-sports VR experience" },
+  { typeName: "Immersive VR", eventId: "4", durationMinutes: 10, price: 99, originalPrice: 220, description: "Narmada riverfront VR experience" },
 ];
 
 // Slot generation patterns per event.
