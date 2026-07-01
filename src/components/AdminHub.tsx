@@ -2,65 +2,89 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { LogOut, type LucideIcon } from "lucide-react";
+import { toast } from "sonner";
+import GlassCard from "@/components/GlassCard";
+import PageTransition from "@/components/PageTransition";
 import { useAuth } from "@/components/AuthProvider";
 
 export interface HubItem {
   label: string;
+  description: string;
   href: string;
   icon: LucideIcon;
 }
 
-export function AdminHub({
-  title,
-  items,
-}: {
-  title: string;
-  items: HubItem[];
-}) {
+export function AdminHub({ items }: { title?: string; items: HubItem[] }) {
   const router = useRouter();
-  const { admin, logout } = useAuth();
+  const { logout } = useAuth();
 
   const handleLogout = async () => {
     await logout();
+    toast.success("Logged out successfully");
     router.replace("/admin");
   };
 
   return (
-    <div className="min-h-screen bg-[#121212] p-6">
-      <div className="max-w-md mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="font-bold text-[22px] text-white">{title}</h1>
-            {admin && (
-              <p className="text-white/60 text-sm">
-                {admin.name} · {admin.role}
-              </p>
-            )}
+    <PageTransition>
+      <div className="bg-black min-h-screen px-4 pb-8">
+        {/* Header */}
+        <div className="relative w-full flex flex-col items-center justify-center min-h-[20vh] mb-6">
+          <div className="absolute top-4 left-4 text-sm font-semibold text-white opacity-50">
+            Admin
           </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-1 text-sm text-white/80 hover:text-white"
-          >
-            <LogOut className="w-4 h-4" /> Logout
-          </button>
+          <div className="w-40 h-auto mb-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/TellMe VR Centre Aankhon Dekha Logo.png" alt="Logo" />
+          </div>
+          <div className="absolute top-4 right-4">
+            <button
+              onClick={handleLogout}
+              className="w-10 h-10 rounded-full flex items-center justify-center bg-[#595959] hover:bg-[#666] transition-colors text-white"
+              aria-label="Logout"
+            >
+              <LogOut className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
-        <div className="space-y-3">
-          {items.map(({ label, href, icon: Icon }) => (
-            <Link
+        {/* Today's bookings */}
+        <div className="grid grid-cols-1 gap-4 mb-6">
+          <div className="bg-[#2C410E] rounded-xl p-4 text-center border border-[#96FF00]">
+            <h3 className="text-2xl font-bold text-white">Today&apos;s Bookings</h3>
+          </div>
+        </div>
+
+        {/* Options */}
+        <div className="space-y-4 mb-6">
+          {items.map(({ label, description, href, icon: Icon }, index) => (
+            <GlassCard
               key={href + label}
-              href={href}
-              className="flex items-center gap-4 bg-[#595959] hover:bg-[#666] text-white rounded-xl p-5 shadow-lg transition-colors"
+              className="cursor-pointer border-transparent hover:border-[#96FF00] hover:bg-[#2C410E] transition-all duration-300 text-white"
+              onClick={() => router.push(href)}
+              delay={index}
             >
-              <span className="inline-flex items-center justify-center w-11 h-11 rounded-full bg-[#96FF00]/10 text-[#96FF00]">
-                <Icon className="w-5 h-5" />
-              </span>
-              <span className="font-semibold">{label}</span>
-            </Link>
+              <div className="flex items-center">
+                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center mr-4">
+                  <Icon className="h-6 w-6 text-black" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold">{label}</h3>
+                  <p className="text-sm">{description}</p>
+                </div>
+              </div>
+            </GlassCard>
           ))}
         </div>
+
+        <Link
+          href="/"
+          className="block w-full text-center py-3 rounded-lg text-white bg-[#99160B] border border-transparent hover:border-[#96FF00] hover:bg-[#96FF00]/20 transition-all duration-300"
+        >
+          Switch to Customer View
+        </Link>
       </div>
-    </div>
+    </PageTransition>
   );
 }

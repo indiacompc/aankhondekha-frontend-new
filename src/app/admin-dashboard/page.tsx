@@ -8,10 +8,9 @@ export default function ReceptionDashboard() {
   return (
     <AdminGuard allowedRoles={["Reception Admin", "Ops Admin", "Super Admin"]}>
       <AdminHub
-        title="Reception"
         items={[
-          { label: "Verify / Check-in Ticket", href: "/ticket-verification", icon: QrCode },
-          { label: "Book a Ticket", href: "/location", icon: Ticket },
+          { label: "Verify / Check-in", description: "Verify and check-in tickets", href: "/ticket-verification", icon: QrCode },
+          { label: "Book a ticket", description: "Book tickets for customers", href: "/location", icon: Ticket },
         ]}
       />
     </AdminGuard>
