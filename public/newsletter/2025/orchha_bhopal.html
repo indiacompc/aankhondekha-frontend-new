@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Immersive Innovation Newsletter</title>
+  <link href='https://fonts.googleapis.com/css?family=Poppins' rel='stylesheet'>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif, 'Poppins';
+      background-color: #f4f4f4;
+      color: #333;
+      line-height: 1.6;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .back {
+      padding: 30px;
+      background-color: #efefef;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: #fff;
+      padding: 50px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h1,
+    h2 {
+      color: #1e3a8a;
+    }
+
+    .date-header {
+      text-align: center;
+      font-weight: bold;
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .main-title {
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .section {
+      margin: 30px 0;
+    }
+
+    .section img {
+      width: 100%;
+      border-radius: 8px;
+      margin-top: 15px;
+    }
+
+    /* Original QR Code and Media section styles - keep these for general appearance */
+    .qr-code {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 10px 0 0 0;
+      /* Adjusted margin for grid */
+      text-align: center;
+    }
+
+    .qr-code img {
+      width: 170px;
+      /* Slightly smaller for grid */
+      height: auto;
+    }
+
+    .media-section ul {
+      list-style-type: disc;
+      margin-left: 20px;
+      padding-bottom: 20px;
+      /* Add some padding below list */
+    }
+
+    .media-section a {
+      word-break: break-word;
+      color: #1d4ed8;
+      text-decoration: none;
+    }
+
+    .media-section a:hover {
+      text-decoration: underline;
+    }
+
+
+    /* Existing main image/text grid */
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      max-width: 1200px;
+      margin: 20px auto;
+      font-family: Arial, sans-serif;
+      color: #333;
+    }
+
+    .grid-item {
+      background-color: #f9f9f9;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .grid-item img {
+      width: 100%;
+      height: auto;
+      display: block;
+      flex-shrink: 0;
+    }
+
+    .grid-item.item-main-photo img {
+      max-height: 450px;
+      object-fit: cover;
+    }
+
+    .item-dark-room img,
+    .item-vr-room img,
+    .item-sand-room img {
+      height: 200px;
+      object-fit: cover;
+      object-position: center;
+    }
+
+
+    .grid-item .content-padding {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      /* Adjusted padding for general content */
+    }
+
+    .grid-item .content-padding h3 {
+      text-align: center;
+      margin-top: 0;
+      margin-bottom: 10px;
+      color: #000;
+      font-size: 1.2em;
+    }
+
+    .grid-item .content-padding p {
+      font-size: 0.85em;
+      line-height: 1.5;
+      margin-top: auto;
+      margin-bottom: 0;
+    }
+
+    .grid-item.item-text-block .content-padding {
+      padding: 10%;
+      justify-content: center;
+    }
+
+
+    .item-main-photo {
+      grid-column: 1 / span 2;
+      grid-row: 1;
+    }
+
+    .item-text-block {
+      grid-column: 3;
+      grid-row: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .item-dark-room {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    .item-vr-room {
+      grid-column: 2;
+      grid-row: 2;
+    }
+
+    .item-sand-room {
+      grid-column: 3;
+      grid-row: 2;
+    }
+
+    /* NEW GRID FOR BOTTOM SECTIONS */
+    .info-grid-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      /* Three equal columns */
+      gap: 20px;
+      /* Space between items */
+      margin-top: 20px;
+      /* Space from the above content */
+    }
+
+    .info-grid-item {
+      background-color: #f0f0f0;
+      padding: 10px;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      /* Align content to the top */
+      text-align: left;
+      /* Default text align */
+    }
+
+    .info-grid-item h2,
+    .info-grid-item h3 {
+      color: #1e3a8a;
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+
+    /* Specific styling for the QR code item in the new grid */
+    .info-item-qr {
+      grid-column: 1;
+      text-align: center;
+      /* Center its content */
+    }
+
+    .info-item-qr p {
+      margin-top: 5px;
+      margin-bottom: 0;
+    }
+
+    .info-item-media {
+      grid-column: 2;
+      /* Aligns text left by default from .info-grid-item */
+    }
+
+    .info-item-more {
+      grid-column: 3;
+      display: flex;
+      flex-direction: column;
+      justify-content: top;
+      text-align: center;
+      color: #000;
+    }
+
+    .info-item-more h3 {
+      margin-bottom: 0;
+      /* Reduce space below heading */
+    }
+
+
+    /* Responsive adjustments for ALL grids */
+    @media (max-width: 768px) {
+
+      .grid-container,
+      .info-grid-container {
+        grid-template-columns: 1fr;
+        /* Single column on smaller screens */
+        grid-template-rows: auto;
+        /* Rows adjust automatically */
+        gap: 15px;
+      }
+
+      .item-main-photo,
+      .item-text-block,
+      .item-dark-room,
+      .item-vr-room,
+      .item-sand-room,
+      .info-item-qr,
+      .info-item-media,
+      .info-item-more {
+        grid-column: 1;
+        /* All items occupy the single column */
+        grid-row: auto;
+        /* Rows will stack automatically */
+      }
+
+      .item-dark-room img,
+      .item-vr-room img,
+      .item-sand-room img {
+        height: 180px;
+        /* Slightly smaller height on mobile */
+      }
+    }
+
+    /* Font-face for Horizon - make sure the path is correct */
+    @font-face {
+      font-family: Horizon;
+      src: url('horizon.otf') format('opentype'),
+        /* otf for best compatibility */
+        url('horizon_outlined.otf') format('opentype');
+      /* WOFF for fallback */
+      font-weight: bolder;
+      /* Or your desired weight */
+      font-style: normal;
+      /* Or your desired style */
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container" style="padding-top: 0%;">
+    <div style="display: flex; justify-content: flex-end; position: relative; z-index: 1;">
+      <img src="https://youtellme.ai/newsletters/images/tellme-logo.png" alt="TellMe Logo"
+        style="width: 180px; height: auto; float: right; position: relative; top: 20px;" />
+    </div>
+
+    <div class="back" style="position: relative; z-index: 0;">
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; text-align: center;">
+        <div style="flex: 1; text-align: left;">Tuesday</div>
+        <div style="flex: 1;">June 10th</div>
+        <div style="flex: 1; text-align: right;">2025</div>
+      </div>
+      <div style="border-top: 2px solid black; border-bottom: 2px solid black; padding: 10px 0; margin: 20px 0;">
+        <div class="main-title" style="font-family: Horizon; font-weight: bolder; font-size: 25px; color: #000;">
+          IMMERSIVE INNOVATION: TELLME'S VR EXPERIENCE CENTRE TRANSFORMS MADHYA PRADESH
+        </div>
+      </div>
+
+      <div class="grid-container">
+
+        <div class="grid-item item-main-photo">
+          <img src="https://youtellme.ai/newsletters/images/1.png" alt="Group photo at Aankhon Dekha VR Experience Centre">
+        </div>
+
+        <div class="grid-item item-text-block" style="background-color: #ffbd35;">
+          <div style="font-size: 90%; padding-left:10%; padding-right:10%; text-align: center; color: #000;">
+            <p style="margin: 0%; padding-bottom: 10%; "> Virtual Reality is redefining storytelling and cultural
+              immersion! TellMe proudly unveils its state-of-the-art VR Experience Centres in Bhopal and Orchha,
+              bringing history,
+              heritage, and tourism to life like never before.</p>
+            <p style="margin: 0%;">A landmark moment for immersive technology! On International Museum Day (May 18,
+              2025), Hon'ble Chief
+              Minister Dr. Mohan Yadav inaugurated the 'Aankhon Dekha' Immersive Experience Centre at the MP State
+              Museum,
+              Bhopal-ushering in a new era of VR-powered cultural storytelling.</p>
+          </div>
+        </div>
+
+        <div class="grid-item item-dark-room">
+
+          <img src="https://youtellme.ai/newsletters/images/WhatsApp Image 2025-05-02 at 1.09.11 PM.jpg" alt="Psychedelic Krishna art in The Dark Room">
+
+          <div class="content-padding" style="background-color: #27272c;">
+            <h3 style="color: #ffbd33; padding-top: 4%; padding-bottom: 4%; font-family: Poppins; margin: 0%;">THE DARK
+              ROOM</h3>
+            <p
+              style="color: white; background: #131318; padding-left: 5%; padding-right: 5%; padding-top: 5%; padding-bottom: 10%; font-size: small; font-family: Poppins; text-align: center; margin-top: 0%;">
+              Experience stories through shadows, sound, and projection in a moody, low-lit space that leaves a lasting
+              impact.</p>
+          </div>
+        </div>
+
+
+        <div class="grid-item item-vr-room">
+          <img src="https://youtellme.ai/newsletters/images/IMG-20250506-WA0013.jpg" alt="VR headsets on chairs in the VR Room">
+          <div class="content-padding" style="background-color: #27272c;">
+            <h3 style="color:#ffbd33; padding-top: 4%; padding-bottom: 4%; font-family: Poppins; margin: 0%;">VR ROOM
+            </h3>
+            <p
+              style="color: white; background: #131318; padding-left: 5%; padding-right: 5%; padding-top: 5%; font-size: small; font-family: Poppins; text-align: center; margin-top: 0%;">
+              Dive into history with VR & AR, and be transported into a narrative journey through historical palaces -all in stereoscopic 3D.</p>
+          </div>
+        </div>
+
+
+
+        <div class="grid-item item-sand-room">
+          <img src="https://youtellme.ai/newsletters/images/IMG-20250516-WA0011.jpg" alt="Person creating sand art in The Sand Room">
+          <div class="content-padding" style="background-color: #27272c;">
+            <h3 style="color: #ffbd33; padding-top: 4%; padding-bottom: 4%; font-family: Poppins; margin: 0%;">SAND ROOM
+            </h3>
+            <p
+              style="color: white; background: #131318; padding-left: 5%; padding-right: 5%; padding-top: 5%; padding-bottom: 10%; font-size: small; font-family: Poppins; text-align: center; margin-top: 0%; ">
+              The Sand Room lets you walk a riverbank, create art, and share stories-surrounded by cool air and
+              dawn-like
+              light.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-grid-container">
+        <div class="info-grid-item info-item-qr">
+          <div class="qr-code">
+            <img src="https://youtellme.ai/newsletters/images/IMG-20250515-WA0011.jpg" alt="QR Code" />
+            <p><strong>For Booking scan the QR Code</strong></p>
+          </div>
+        </div>
+
+        <div class="info-grid-item info-item-media">
+          <div class="media-section">
+            <h2 style="color: #000;">Media Highlights</h2>
+            <ul>
+              <li style="font-size: larger;"><a style="color: #000;"
+                  href="https://yourstory.com/2025/05/immersive-culture-virtual-reality-state-museum-bhopal-media-photography"
+                  target="_blank">Your Story Article</a></li>
+              <li style="font-size: larger;"><a style="color: #000;"
+                  href="https://www.freepressjournal.in/bhopal/chief-minister-mohan-yadav-inaugurates-museum-fair-at-bhopals-state-museum-mp-gets-its-first-virtual-heritage-experience-watch"
+                  target="_blank">Free Press Journal</a></li>
+              <li style="font-size: larger;"><a style="color: #000;"
+                  href="https://www.instagram.com/reel/DJy5AcaPfMK/?igsh=ZDBpZ2UzZ2QxbWNh" target="_blank">Instagram</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="info-grid-item info-item-more">
+          <h3 style="font-weight: 600; font-size:x-large ; "><a style="color: #000;"
+              href="https://youtellme.ai/virtual-reality/">To know more about the VR services provided:</a></h3>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

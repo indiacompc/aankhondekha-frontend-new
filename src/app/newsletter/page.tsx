@@ -24,31 +24,53 @@ interface NewsletterIssue {
 }
 
 /**
- * Past newsletter issues, newest first. To add a new issue, prepend an entry
- * here. Set `url` to a hosted PDF/page once available; until then the card
- * shows a "Coming soon" state.
+ * Past newsletter issues, newest first. Each `url` points to a static HTML
+ * issue in /public/newsletter. Cover images use the same hosted URLs the
+ * newsletters themselves reference. Dates are approximate — adjust as needed.
  */
 const issues: NewsletterIssue[] = [
   {
-    id: "2025-06",
-    title: "June 2025 — New Worlds in VR",
+    id: "2026-education-vr",
+    title: "Education Through Virtual Reality",
+    date: "2026-01-01",
+    excerpt:
+      "How immersive VR is transforming classrooms and bringing learning to life for students.",
+    url: "/newsletter/2026/Education_Through_Virtual_Reality.html",
+    cover: "https://youtellme.ai/newsletters/images/2026.jpeg",
+  },
+  {
+    id: "2025-sanchi-mandu-orchha",
+    title: "VR Experience Centre — Sanchi, Mandu, Orchha & Bandhavgarh",
+    date: "2025-09-01",
+    excerpt:
+      "A journey through Madhya Pradesh's iconic heritage sites, brought to life in immersive 360° VR.",
+    url: "/newsletter/2025/Aankhon_Dekha_VR_Experience_Sanchi_Mandu_Orchha_Bandhavgarh.html",
+  },
+  {
+    id: "2025-khargone",
+    title: "Virtual Reality Training for Women — Khargone",
+    date: "2025-08-01",
+    excerpt:
+      "Empowering women in Khargone with hands-on virtual reality training and new digital skills.",
+    url: "/newsletter/2025/Aankhon_Dekha_VR_Experience_Khargone.html",
+    cover: "https://youtellme.ai/newsletters/images/khargone.jpeg",
+  },
+  {
+    id: "2025-student",
+    title: "State Museum VR Centre — For Students",
+    date: "2025-07-01",
+    excerpt:
+      "Bringing history to life for students through the VR experience centre at the Bhopal State Museum.",
+    url: "/newsletter/2025/Aankhon_Dekha_VR_Experience_Student.html",
+    cover: "https://youtellme.ai/newsletters/images/student_vr.jpeg",
+  },
+  {
+    id: "2025-orchha-bhopal",
+    title: "Immersive Innovation — Orchha & Bhopal",
     date: "2025-06-01",
     excerpt:
-      "A look at the latest immersive experiences launching across our Bhopal, Orchha and Maheshwar centres, plus visitor stories from the past month.",
-  },
-  {
-    id: "2025-05",
-    title: "May 2025 — Heritage, Reimagined",
-    date: "2025-05-01",
-    excerpt:
-      "How we are bringing Madhya Pradesh's history to life through virtual reality, and a behind-the-scenes look at our content team.",
-  },
-  {
-    id: "2025-04",
-    title: "April 2025 — Welcome to Aankhon Dekha",
-    date: "2025-04-01",
-    excerpt:
-      "Our very first newsletter: the story behind Aankhon Dekha, what to expect on your visit, and what is coming next.",
+      "The latest immersive experiences and stories from our Orchha and Bhopal centres.",
+    url: "/newsletter/2025/orchha_bhopal.html",
   },
 ];
 
