@@ -11,6 +11,15 @@ import { adminHome } from "@/components/AdminGuard";
 const inputClass =
   "w-full pl-10 pr-10 py-2 bg-[#595959] text-white placeholder:text-white/70 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#96FF00] focus:border-transparent outline-none";
 
+// Staff log in with their Admin ID (e.g. "MP04201"); the migrated accounts use
+// <id>@aankhondekha.local as the Firebase email. A full email (with "@") is
+// used as-is, so the admin@aankhondekha.com super admin still works.
+const ADMIN_EMAIL_DOMAIN = "aankhondekha.local";
+function resolveAdminEmail(input: string): string {
+  const raw = input.trim();
+  return (raw.includes("@") ? raw : `${raw}@${ADMIN_EMAIL_DOMAIN}`).toLowerCase();
+}
+
 export default function AdminLogin() {
   const router = useRouter();
   const { admin, loading, login } = useAuth();
@@ -27,7 +36,7 @@ export default function AdminLogin() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const a = await login(email.trim(), password);
+      const a = await login(resolveAdminEmail(email), password);
       toast.success("✅ Welcome, Admin!");
       router.replace(adminHome(a.role));
     } catch (err) {
@@ -75,11 +84,13 @@ export default function AdminLogin() {
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 h-4 w-4" />
                 <input
                   id="email"
-                  type="email"
+                  type="text"
+                  autoCapitalize="none"
+                  autoComplete="username"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className={inputClass}
-                  placeholder="Enter your email"
+                  placeholder="Enter your Admin ID"
                   required
                 />
               </div>
