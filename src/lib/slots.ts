@@ -1,9 +1,8 @@
 /**
- * Slot generation patterns per event (must match scripts/seed.mjs).
- *   Orchha (1): 15-min, 09:00–22:00, cap 6
- *   Bhopal (2): hourly,  11:00–18:00, cap 20
- *   Bhopal Boat Club (3): 15-min, 12:00–22:00, cap 10
- *   Maheshwar (4): hourly, 10:00–18:00, cap 10
+ * Slot generation patterns per event. Derived from the real production data:
+ * both locations run 15-min slots from 09:00 to 22:00 (52 slots/day).
+ *   Orchha (1):                    15-min, 09:00–22:00, cap 6
+ *   Wind & Waves - State Museum (3): 15-min, 09:00–22:00, cap 10
  */
 
 export interface SlotPattern {
@@ -15,7 +14,7 @@ export interface SlotPattern {
 
 export const SLOT_PATTERNS: Record<string, SlotPattern> = {
   "1": { startMin: 9 * 60, endMin: 22 * 60, intervalMin: 15, capacity: 6 },
-  "3": { startMin: 12 * 60, endMin: 22 * 60, intervalMin: 15, capacity: 10 },
+  "3": { startMin: 9 * 60, endMin: 22 * 60, intervalMin: 15, capacity: 10 },
 };
 
 export function fmtTime(minutes: number): string {
