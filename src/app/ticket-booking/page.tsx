@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import BackButton from "@/components/BackButton";
 import { AdminGuard } from "@/components/AdminGuard";
 import { useAuth } from "@/components/AuthProvider";
@@ -9,8 +11,9 @@ import {
   getSlots,
   getTicketTypes,
   bookTicket,
+  registerCustomer,
 } from "@/lib/db";
-import { totalFor, todayISO } from "@/lib/booking";
+import { totalFor, gstInclusive } from "@/lib/booking";
 import { digitsOnly } from "@/lib/phone";
 import type { EventDoc, Slot, TicketType, PaymentOption } from "@/lib/types";
 
@@ -25,6 +28,8 @@ const PAYMENT_OPTIONS: { value: PaymentOption; label: string }[] = [
   { value: "Free Ticket", label: "Free Ticket" },
 ];
 
+const fmtDate = (d: Date) => d.toLocaleDateString("en-CA"); // YYYY-MM-DD local
+
 function ManualBooking() {
   const { admin } = useAuth();
 
@@ -32,24 +37,28 @@ function ManualBooking() {
   const [slots, setSlots] = useState<Slot[]>([]);
   const [types, setTypes] = useState<TicketType[]>([]);
 
-  // Customer
+  // Customer Info
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
   const [email, setEmail] = useState("");
   const [gender, setGender] = useState("");
   const [ageGroup, setAgeGroup] = useState("");
 
-  // Ticket
+  // Ticket Info
+  const [ticketMobile, setTicketMobile] = useState("");
   const [eventId, setEventId] = useState("");
-  const [bookingDate, setBookingDate] = useState(todayISO());
+  const [bookingDate, setBookingDate] = useState<Date | null>(new Date());
   const [slotId, setSlotId] = useState("");
   const [ticketTypeId, setTicketTypeId] = useState("");
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState<number | "">("");
   const [complimentary, setComplimentary] = useState(0);
+  const [gstAmount, setGstAmount] = useState<number | "">("");
+  const [totalAmount, setTotalAmount] = useState<number | "">("");
   const [paymentOption, setPaymentOption] = useState<PaymentOption>("cash");
   const [busy, setBusy] = useState(false);
 
   const [popup, setPopup] = useState<{ msg: string; ok: boolean } | null>(null);
+  const notify = (msg: string, ok: boolean) => setPopup({ msg, ok });
 
   useEffect(() => {
     getEvents().then((evs) => {
@@ -65,15 +74,23 @@ function ManualBooking() {
 
   useEffect(() => {
     if (!eventId || !bookingDate) return;
-    getSlots(eventId, bookingDate, true).then(setSlots);
+    getSlots(eventId, fmtDate(bookingDate), true).then(setSlots);
     setSlotId("");
   }, [eventId, bookingDate]);
 
-  const ticketType = types.find((t) => t.id === ticketTypeId);
-  const total =
-    paymentOption === "Free Ticket" || !ticketType
-      ? 0
-      : totalFor(ticketType.price, quantity);
+  // Auto-fill Total & GST when ticket type / quantity change (still editable).
+  useEffect(() => {
+    if (paymentOption === "Free Ticket") {
+      setTotalAmount(0);
+      setGstAmount(0);
+      return;
+    }
+    const t = types.find((x) => x.id === ticketTypeId);
+    if (!t || !quantity) return;
+    const total = totalFor(t.price, Number(quantity));
+    setTotalAmount(total);
+    setGstAmount(gstInclusive(total));
+  }, [ticketTypeId, quantity, paymentOption, types]);
 
   const reset = () => {
     setName("");
@@ -81,51 +98,73 @@ function ManualBooking() {
     setEmail("");
     setGender("");
     setAgeGroup("");
+    setTicketMobile("");
     setSlotId("");
     setTicketTypeId("");
-    setQuantity(1);
+    setQuantity("");
     setComplimentary(0);
+    setGstAmount("");
+    setTotalAmount("");
     setPaymentOption("cash");
   };
 
-  const submit = async () => {
+  const handleRegisterCustomer = async () => {
     if (!name || mobile.length !== 10 || !gender || !ageGroup)
-      return setPopup({ msg: "❗ Fill all required customer fields", ok: false });
+      return notify("❗ Fill all required customer fields", false);
+    setBusy(true);
+    try {
+      const res = await registerCustomer(mobile, { name, email, gender, ageGroup });
+      if (res === "exists") notify("⚠️ Customer already exists", false);
+      else notify("✅ Customer registered successfully", true);
+    } catch (err) {
+      console.error(err);
+      notify("❌ Customer registration failed", false);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleBookTicket = async () => {
     const event = events.find((e) => e.eventId === eventId);
     const slot = slots.find((s) => s.id === slotId);
-    if (!event || !slot || !ticketType || !admin)
-      return setPopup({ msg: "❗ Select event, slot and ticket type", ok: false });
-    if (slot.availableSeats < quantity + complimentary)
-      return setPopup({ msg: "❗ Not enough seats in this slot", ok: false });
+    const ticketType = types.find((t) => t.id === ticketTypeId);
+    if (
+      ticketMobile.length !== 10 || !bookingDate || !slot || !ticketType ||
+      !quantity || totalAmount === "" || !event || !admin
+    )
+      return notify("❗ Fill all required ticket fields", false);
+    if (slot.availableSeats < Number(quantity) + complimentary)
+      return notify("❗ Not enough seats in this slot", false);
 
     setBusy(true);
     try {
       await bookTicket({
-        uid: admin.uid,
-        mobile: `+91${mobile}`,
-        customerName: name,
+        uid: ticketMobile,
+        mobile: `+91${ticketMobile}`,
+        customerName: ticketMobile === mobile ? name : "",
         event,
         ticketType,
         slot,
-        bookingDate,
-        quantity,
+        bookingDate: fmtDate(bookingDate),
+        quantity: Number(quantity),
         complimentaryTicket: complimentary,
-        totalAmount: total,
+        totalAmount: Number(totalAmount),
+        gstAmount: gstAmount === "" ? undefined : Number(gstAmount),
         paymentOption,
         paymentStatus: "paid",
-        adminId: admin.uid,
+        adminId: admin.legacyUsername ?? admin.email ?? admin.uid,
       });
-      setPopup({ msg: "✅ Ticket booked successfully", ok: true });
+      notify("✅ Ticket booked successfully", true);
     } catch (err) {
       console.error(err);
-      setPopup({ msg: "❌ Ticket booking failed", ok: false });
+      notify("❌ Ticket booking failed", false);
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#121212] text-white p-6 md:p-8 max-w-5xl mx-auto relative">
+    <div className="min-h-screen bg-[#121212] text-white p-8 max-w-5xl mx-auto relative">
       <BackButton />
       <h1 className="text-2xl font-bold mb-6 text-center text-[#96FF00]">
         Manual Ticket Booking
@@ -149,22 +188,36 @@ function ManualBooking() {
           <label className={labelClass}>Gender</label>
           <select value={gender} onChange={(e) => setGender(e.target.value)} className={inputClass}>
             <option value="">Select Gender</option>
-            <option>Male</option>
-            <option>Female</option>
-            <option>Other</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
           </select>
           <label className={labelClass}>Age Group</label>
           <select value={ageGroup} onChange={(e) => setAgeGroup(e.target.value)} className={inputClass}>
             <option value="">Select Age Group</option>
-            <option>16-25</option>
-            <option>25-40</option>
-            <option>40+</option>
+            <option value="16-25">16-25</option>
+            <option value="25-40">25-40</option>
+            <option value="40+">40+</option>
           </select>
+          <button
+            onClick={handleRegisterCustomer}
+            disabled={busy}
+            className="bg-[#96FF00] text-black font-bold py-2 px-4 rounded mt-4 w-full disabled:opacity-60"
+          >
+            Register Customer
+          </button>
         </div>
 
         {/* Ticket Info */}
         <div className="bg-[#1c1c1c] border border-[#96FF00] p-6 rounded">
           <h2 className="font-semibold mb-4 text-center">Ticket Info</h2>
+          <label className={labelClass}>Customer Mobile No</label>
+          <input
+            className={inputClass}
+            inputMode="numeric"
+            value={ticketMobile}
+            onChange={(e) => setTicketMobile(digitsOnly(e.target.value, 10))}
+          />
           <label className={labelClass}>Event Location</label>
           <select value={eventId} onChange={(e) => setEventId(e.target.value)} className={inputClass}>
             {events.map((e) => (
@@ -174,12 +227,13 @@ function ManualBooking() {
             ))}
           </select>
           <label className={labelClass}>Booking Date</label>
-          <input
-            type="date"
-            min={todayISO()}
-            value={bookingDate}
-            onChange={(e) => setBookingDate(e.target.value)}
+          <DatePicker
+            selected={bookingDate}
+            onChange={(date: Date | null) => setBookingDate(date)}
             className={inputClass}
+            dateFormat="yyyy-MM-dd"
+            minDate={new Date()}
+            placeholderText="Select booking date"
           />
           <label className={labelClass}>Slot</label>
           <select value={slotId} onChange={(e) => setSlotId(e.target.value)} className={inputClass}>
@@ -209,7 +263,7 @@ function ManualBooking() {
             min={1}
             className={inputClass}
             value={quantity}
-            onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
+            onChange={(e) => setQuantity(e.target.value === "" ? "" : Math.max(1, Number(e.target.value)))}
           />
           <label className={labelClass}>Complimentary Ticket</label>
           <input
@@ -218,6 +272,22 @@ function ManualBooking() {
             className={inputClass}
             value={complimentary}
             onChange={(e) => setComplimentary(Math.max(0, Number(e.target.value)))}
+          />
+          <label className={labelClass}>GST Amount</label>
+          <input
+            type="number"
+            min={0}
+            className={inputClass}
+            value={gstAmount}
+            onChange={(e) => setGstAmount(e.target.value === "" ? "" : Number(e.target.value))}
+          />
+          <label className={labelClass}>Total Amount</label>
+          <input
+            type="number"
+            min={0}
+            className={inputClass}
+            value={totalAmount}
+            onChange={(e) => setTotalAmount(e.target.value === "" ? "" : Number(e.target.value))}
           />
           <label className={labelClass}>Payment Option</label>
           <select
@@ -232,15 +302,10 @@ function ManualBooking() {
             ))}
           </select>
 
-          <div className="flex justify-between text-sm mb-3">
-            <span className="text-[#96FF00]">Total</span>
-            <span>₹{total.toLocaleString()}</span>
-          </div>
-
           <button
-            onClick={submit}
+            onClick={handleBookTicket}
             disabled={busy}
-            className="bg-[#96FF00] text-black font-bold py-2 px-4 rounded mt-2 w-full disabled:opacity-60"
+            className="bg-[#96FF00] text-black font-bold py-2 px-4 rounded mt-4 w-full disabled:opacity-60"
           >
             {busy ? "Booking…" : "Book Ticket"}
           </button>

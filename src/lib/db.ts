@@ -8,6 +8,7 @@ import {
   query,
   runTransaction,
   serverTimestamp,
+  setDoc,
   updateDoc,
   where,
   writeBatch,
@@ -103,6 +104,8 @@ export interface BookingInput {
   quantity: number;
   complimentaryTicket: number;
   totalAmount: number;
+  /** Optional GST override (manual bookings); defaults to the included 18%. */
+  gstAmount?: number;
   paymentOption: PaymentOption;
   paymentStatus: PaymentStatus;
   adminId?: string | null;
@@ -141,7 +144,7 @@ export async function bookTicket(input: BookingInput): Promise<string> {
       quantity: input.quantity,
       complimentaryTicket: input.complimentaryTicket,
       totalAmount: input.totalAmount,
-      gstAmount: gstInclusive(input.totalAmount),
+      gstAmount: input.gstAmount ?? gstInclusive(input.totalAmount),
       paymentOption: input.paymentOption,
       paymentStatus: input.paymentStatus,
       isValid: true,
@@ -161,6 +164,38 @@ export async function checkInTicket(id: string): Promise<Ticket | null> {
   if (!ticket) return null;
   await updateDoc(doc(db, "tickets", id), { isValid: false });
   return { ...ticket, isValid: false };
+}
+
+/* ----------------------------- customers ----------------------------- */
+
+export interface CustomerInput {
+  name: string;
+  email?: string;
+  gender: string;
+  ageGroup: string;
+}
+
+/**
+ * Register a customer profile from the admin manual-booking screen. Keyed by
+ * mobile number (matching the migrated data). Returns "exists" if one is
+ * already registered for that mobile, else "created".
+ */
+export async function registerCustomer(
+  mobile: string,
+  info: CustomerInput,
+): Promise<"created" | "exists"> {
+  const ref = doc(db, "customers", mobile);
+  const snap = await getDoc(ref);
+  if (snap.exists()) return "exists";
+  await setDoc(ref, {
+    mobile: `+91${mobile}`,
+    name: info.name,
+    email: info.email ?? "",
+    gender: info.gender,
+    ageGroup: info.ageGroup,
+    createdAt: serverTimestamp(),
+  });
+  return "created";
 }
 
 /* ----------------------------- gift tickets ----------------------------- */

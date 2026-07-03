@@ -97,6 +97,7 @@ export interface AdminDoc {
   name: string;
   role: AdminRole;
   eventId?: string | null; // assigned location (Reception Admin)
+  legacyUsername?: string; // original staff ID from the migrated database
 }
 
 export interface FieldVisit {
