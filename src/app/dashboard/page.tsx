@@ -4,33 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import * as XLSX from "xlsx";
-import {
-  AreaChart,
-  Area,
-  CartesianGrid,
-  Tooltip,
-  XAxis,
-  YAxis,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  BarChart,
-  LabelList,
-  Bar,
-} from "recharts";
 import BackButton from "@/components/BackButton";
 import { AdminGuard } from "@/components/AdminGuard";
 import { getEvents, getTicketsByDateRange } from "@/lib/db";
 import type { EventDoc, Ticket } from "@/lib/types";
-
-const PIE_COLORS = [
-  "#96FF00",
-  "#2C410E",
-  "#4CAF50",
-  "#1F1F1F",
-  "#00C49F",
-  "#66BB6A",
-];
 
 const fmtDate = (d: Date) => d.toLocaleDateString("en-CA"); // YYYY-MM-DD local
 
@@ -52,6 +29,43 @@ function adminLabel(adminId: string | null | undefined): string {
   const i = adminId.indexOf("_");
   const name = i >= 0 ? adminId.slice(i + 1) : adminId;
   return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
+type Row = Record<string, string | number>;
+
+/** A simple bordered data table. */
+function DataTable({ title, rows }: { title: string; rows: Row[] }) {
+  return (
+    <div className="bg-[#1c1c1c] border border-[#96FF00] rounded p-4 overflow-x-auto mt-6">
+      <h2 className="text-lg font-semibold mb-4 text-white">{title}</h2>
+      {rows.length === 0 ? (
+        <p className="text-gray-400">No data available.</p>
+      ) : (
+        <table className="min-w-full text-sm border border-[#2C410E] text-white">
+          <thead className="bg-[#2C410E]">
+            <tr>
+              {Object.keys(rows[0]).map((col) => (
+                <th key={col} className="px-4 py-2 border-b border-[#4CAF50] text-left whitespace-nowrap">
+                  {col}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, idx) => (
+              <tr key={idx} className="hover:bg-[#96FF00]/10">
+                {Object.keys(rows[0]).map((col) => (
+                  <td key={col} className="px-4 py-2 border-b border-[#333] whitespace-nowrap">
+                    {String(row[col] ?? "")}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
 }
 
 function Dashboard() {
@@ -77,9 +91,7 @@ function Dashboard() {
       setError(null);
       try {
         const all = await getTicketsByDateRange(fmtDate(startDate), fmtDate(endDate));
-        const filtered = selectedEvent
-          ? all.filter((t) => t.eventId === selectedEvent)
-          : all;
+        const filtered = selectedEvent ? all.filter((t) => t.eventId === selectedEvent) : all;
         if (!cancelled) setTickets(filtered);
       } catch (err) {
         console.error(err);
@@ -93,59 +105,84 @@ function Dashboard() {
     };
   }, [startDate, endDate, selectedEvent]);
 
-  const { slotSummary, ticketTypeData, adminSales, ticketStats } = useMemo(() => {
-    const bySlot: Record<string, number> = {};
-    const byType: Record<string, number> = {};
-    const byAdmin: Record<string, { tickets: number; sales: number }> = {};
-    const byDate: Record<
-      string,
-      { Date: string; "Tickets Booked": number; "Revenue (₹)": number; "GST (₹)": number }
-    > = {};
+  const { perSlot, byType, byAdmin, byDate, bookings, totals } = useMemo(() => {
+    const slot: Record<string, number> = {};
+    const type: Record<string, number> = {};
+    const admin: Record<string, { tickets: number; sales: number }> = {};
+    const date: Record<string, { Date: string; Tickets: number; Revenue: number; GST: number }> = {};
+    let totalTickets = 0;
+    let totalRevenue = 0;
+    let totalGst = 0;
 
-    for (const t of tickets) {
+    const detail: Row[] = tickets.map((t) => {
       const qty = (t.quantity || 0) + (t.complimentaryTicket || 0);
-      bySlot[t.slotTime] = (bySlot[t.slotTime] || 0) + qty;
-      byType[t.typeName] = (byType[t.typeName] || 0) + qty;
+      totalTickets += qty;
+      totalRevenue += t.totalAmount || 0;
+      totalGst += t.gstAmount || 0;
 
-      const aLabel = adminLabel(t.adminId);
-      byAdmin[aLabel] = byAdmin[aLabel] || { tickets: 0, sales: 0 };
-      byAdmin[aLabel].tickets += qty;
-      byAdmin[aLabel].sales += t.totalAmount || 0;
-
+      slot[t.slotTime] = (slot[t.slotTime] || 0) + qty;
+      type[t.typeName] = (type[t.typeName] || 0) + qty;
+      const al = adminLabel(t.adminId);
+      admin[al] = admin[al] || { tickets: 0, sales: 0 };
+      admin[al].tickets += qty;
+      admin[al].sales += t.totalAmount || 0;
       const d = t.bookingDate;
-      byDate[d] = byDate[d] || { Date: d, "Tickets Booked": 0, "Revenue (₹)": 0, "GST (₹)": 0 };
-      byDate[d]["Tickets Booked"] += qty;
-      byDate[d]["Revenue (₹)"] += t.totalAmount || 0;
-      byDate[d]["GST (₹)"] += t.gstAmount || 0;
-    }
+      date[d] = date[d] || { Date: d, Tickets: 0, Revenue: 0, GST: 0 };
+      date[d].Tickets += qty;
+      date[d].Revenue += t.totalAmount || 0;
+      date[d].GST += t.gstAmount || 0;
+
+      return {
+        "Ticket ID": t.id,
+        Date: t.bookingDate,
+        Location: t.location,
+        "Ticket Type": t.typeName,
+        Slot: t.slotTime,
+        Mobile: t.mobile,
+        Customer: t.customerName || "",
+        Qty: t.quantity,
+        Comp: t.complimentaryTicket || 0,
+        "Total (₹)": Math.round(t.totalAmount || 0),
+        "GST (₹)": Math.round(t.gstAmount || 0),
+        Payment: t.paymentOption,
+        Status: t.isValid ? "Valid" : "Used",
+        Admin: adminLabel(t.adminId),
+      };
+    });
 
     return {
-      slotSummary: Object.entries(bySlot)
-        .map(([slot_time, tickets_booked]) => ({ slot_time, tickets_booked }))
-        .sort((a, b) => startMinutes(a.slot_time) - startMinutes(b.slot_time)),
-      ticketTypeData: Object.entries(byType).map(([type_name, total_booked]) => ({
-        type_name,
-        total_booked,
-      })),
-      adminSales: Object.entries(byAdmin)
-        .map(([name, v]) => ({ name, tickets: v.tickets, sales: Math.round(v.sales) }))
-        .sort((a, b) => b.sales - a.sales),
-      ticketStats: Object.values(byDate)
-        .map((r) => ({
-          ...r,
-          "Revenue (₹)": Math.round(r["Revenue (₹)"]),
-          "GST (₹)": Math.round(r["GST (₹)"]),
-        }))
+      perSlot: Object.entries(slot)
+        .map(([Slot, Tickets]) => ({ Slot, "Tickets Booked": Tickets }))
+        .sort((a, b) => startMinutes(a.Slot) - startMinutes(b.Slot)),
+      byType: Object.entries(type).map(([Type, Booked]) => ({ "Ticket Type": Type, "Total Booked": Booked })),
+      byAdmin: Object.entries(admin)
+        .map(([Admin, v]) => ({ Admin, Tickets: v.tickets, "Sales (₹)": Math.round(v.sales) }))
+        .sort((a, b) => b["Sales (₹)"] - a["Sales (₹)"]),
+      byDate: Object.values(date)
+        .map((r) => ({ Date: r.Date, "Tickets Booked": r.Tickets, "Revenue (₹)": Math.round(r.Revenue), "GST (₹)": Math.round(r.GST) }))
         .sort((a, b) => a.Date.localeCompare(b.Date)),
+      bookings: detail.sort((a, b) => String(b.Date).localeCompare(String(a.Date))),
+      totals: {
+        bookings: tickets.length,
+        tickets: totalTickets,
+        revenue: Math.round(totalRevenue),
+        gst: Math.round(totalGst),
+      },
     };
   }, [tickets]);
 
-  const exportTableToExcel = () => {
-    if (ticketStats.length === 0) return;
-    const worksheet = XLSX.utils.json_to_sheet(ticketStats);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "TicketStats");
-    const buffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+  const downloadExcel = () => {
+    if (tickets.length === 0) return;
+    const wb = XLSX.utils.book_new();
+    const add = (name: string, rows: Row[]) => {
+      if (rows.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), name);
+    };
+    add("Bookings", bookings);
+    add("Date Wise", byDate);
+    add("Per Slot", perSlot);
+    add("Ticket Types", byType);
+    add("Admin Sales", byAdmin);
+    const buffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
     const blob = new Blob([buffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
@@ -158,6 +195,13 @@ function Dashboard() {
   };
 
   const dpClass = "bg-[#1f1f1f] text-white px-3 py-2 rounded border border-[#96FF00]";
+
+  const summaryCard = (label: string, value: string) => (
+    <div className="bg-[#1c1c1c] border border-[#96FF00] rounded p-4">
+      <p className="text-white/60 text-xs">{label}</p>
+      <p className="text-2xl font-bold mt-1 text-white">{value}</p>
+    </div>
+  );
 
   return (
     <div className="p-6 bg-[#121212] min-h-screen text-white max-w-screen-xl mx-auto">
@@ -190,181 +234,52 @@ function Dashboard() {
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1 text-white">Select Event</label>
-          <select
-            value={selectedEvent}
-            onChange={(e) => setSelectedEvent(e.target.value)}
-            className={dpClass}
-          >
-            <option value="">All Events</option>
-            {events.map((ev) => (
-              <option key={ev.eventId} value={ev.eventId}>
-                {ev.location}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Tickets Booked Per Slot */}
-      <div className="mt-10 bg-[#1c1c1c] p-4 rounded border border-[#96FF00]">
-        <h2 className="text-lg font-semibold mb-4 text-white">Tickets Booked Per Slot</h2>
-        {loading ? (
-          <p className="text-gray-400">Loading stats...</p>
-        ) : slotSummary.length === 0 ? (
-          <p className="text-gray-400">No data available</p>
-        ) : (
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={slotSummary} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="colorBooked" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#96FF00" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#96FF00" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <XAxis
-                dataKey="slot_time"
-                tick={{ fill: "#ccc", fontSize: 10 }}
-                angle={-45}
-                textAnchor="end"
-                height={80}
-              />
-              <YAxis tick={{ fill: "#ccc" }} />
-              <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-              <Tooltip />
-              <Area
-                type="monotone"
-                dataKey="tickets_booked"
-                stroke="#96FF00"
-                fillOpacity={1}
-                fill="url(#colorBooked)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        )}
-      </div>
-
-      {/* Two charts side by side */}
-      <div className="flex flex-wrap justify-start mt-10 gap-5">
-        <div className="bg-[#1c1c1c] border border-[#96FF00] rounded p-4 w-[600px] max-w-full">
-          <h2 className="text-lg font-semibold mb-4 text-white text-center">
-            Ticket Type Distribution
-          </h2>
-          {ticketTypeData.length === 0 ? (
-            <p className="text-gray-400 text-center">No data available</p>
-          ) : (
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={ticketTypeData.map((item, index) => ({
-                    name: item.type_name,
-                    value: item.total_booked,
-                    fill: PIE_COLORS[index % PIE_COLORS.length],
-                  }))}
-                  dataKey="value"
-                  nameKey="name"
-                  outerRadius={100}
-                  label={({ name, value, cx, cy, midAngle, outerRadius }: any) => {
-                    const RADIAN = Math.PI / 180;
-                    const radius = outerRadius + 20;
-                    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-                    return (
-                      <text
-                        x={x}
-                        y={y}
-                        fill="#96FF00"
-                        textAnchor={x > cx ? "start" : "end"}
-                        dominantBaseline="central"
-                        fontSize={12}
-                        fontWeight="bold"
-                      >
-                        {`${name}: ${value}`}
-                      </text>
-                    );
-                  }}
-                />
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-
-        {/* Admin Sales Bar Chart */}
-        <div className="bg-[#1c1c1c] border border-[#96FF00] rounded p-4 w-[600px] max-w-full">
-          <h2 className="text-lg font-semibold mb-4 text-white text-center">
-            Admin-wise Booking Performance
-          </h2>
-          {adminSales.length === 0 ? (
-            <p className="text-gray-400 text-center">No sales data available</p>
-          ) : (
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={adminSales} layout="vertical" margin={{ top: 20, right: 40, left: 60, bottom: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
-                <YAxis type="category" dataKey="name" />
-                <Tooltip
-                  formatter={(value: any, name: any) => {
-                    if (name === "sales") return [`₹${value}`, "Total Sales"];
-                    if (name === "tickets") return [`${value} tickets`, "Total Tickets"];
-                    return value;
-                  }}
-                />
-                <Bar dataKey="sales" fill="#4CAF50">
-                  <LabelList dataKey="sales" position="right" formatter={(val: any) => `₹${val}`} className="fill-white text-sm" />
-                  <LabelList dataKey="tickets" position="insideLeft" formatter={(val: any) => `${val} tickets`} className="fill-white text-xs" />
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-      </div>
-
-      {/* Download Excel */}
-      <div className="flex justify-end mb-4 mt-4">
-        <button
-          onClick={exportTableToExcel}
-          className="bg-[#96FF00] text-black font-semibold px-4 py-2 rounded hover:bg-lime-300 transition"
-        >
-          Download Excel
-        </button>
-      </div>
-
-      {/* Date Wise Ticket Summary */}
-      <div className="bg-[#1c1c1c] border border-[#96FF00] rounded p-4 overflow-x-auto">
-        <h2 className="text-lg font-semibold mb-4">Date Wise Ticket Summary</h2>
-        {loading ? (
-          <p className="text-gray-400">Loading stats...</p>
-        ) : error ? (
-          <p className="text-red-500">{error}</p>
-        ) : ticketStats.length === 0 ? (
-          <p className="text-gray-400">No data available for selected range.</p>
-        ) : (
-          <table className="min-w-full text-sm border border-[#2C410E] text-white">
-            <thead className="bg-[#2C410E]">
-              <tr>
-                {Object.keys(ticketStats[0]).map((col) => (
-                  <th key={col} className="px-4 py-2 border-b border-[#4CAF50] text-left">
-                    {col}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {ticketStats.map((row, idx) => (
-                <tr key={idx} className="hover:bg-[#96FF00]/10">
-                  {Object.keys(row).map((col) => (
-                    <td key={col} className="px-4 py-2 border-b border-[#333]">
-                      {String(row[col as keyof typeof row])}
-                    </td>
-                  ))}
-                </tr>
+        <div className="flex items-end gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1 text-white">Select Event</label>
+            <select
+              value={selectedEvent}
+              onChange={(e) => setSelectedEvent(e.target.value)}
+              className={dpClass}
+            >
+              <option value="">All Events</option>
+              {events.map((ev) => (
+                <option key={ev.eventId} value={ev.eventId}>
+                  {ev.location}
+                </option>
               ))}
-            </tbody>
-          </table>
-        )}
+            </select>
+          </div>
+          <button
+            onClick={downloadExcel}
+            className="bg-[#96FF00] text-black font-semibold px-4 py-2 rounded hover:bg-lime-300 transition"
+          >
+            Download Excel
+          </button>
+        </div>
       </div>
+
+      {loading ? (
+        <p className="text-gray-400">Loading stats...</p>
+      ) : error ? (
+        <p className="text-red-500">{error}</p>
+      ) : (
+        <>
+          {/* Summary totals */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-2">
+            {summaryCard("Bookings", String(totals.bookings))}
+            {summaryCard("Tickets Sold", String(totals.tickets))}
+            {summaryCard("Revenue", `₹${totals.revenue}`)}
+            {summaryCard("GST", `₹${totals.gst}`)}
+          </div>
+
+          <DataTable title="Date Wise Ticket Summary" rows={byDate} />
+          <DataTable title="Tickets Booked Per Slot" rows={perSlot} />
+          <DataTable title="Ticket Type Distribution" rows={byType} />
+          <DataTable title="Admin-wise Booking Performance" rows={byAdmin} />
+          <DataTable title="All Bookings" rows={bookings} />
+        </>
+      )}
     </div>
   );
 }
