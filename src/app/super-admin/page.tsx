@@ -1,6 +1,6 @@
 "use client";
 
-import { Users, BarChart3, CalendarPlus, Ticket, QrCode, ClipboardList } from "lucide-react";
+import { Users, BarChart3, CalendarPlus, Ticket, ClipboardList } from "lucide-react";
 import { AdminGuard } from "@/components/AdminGuard";
 import { AdminHub } from "@/components/AdminHub";
 
@@ -13,7 +13,6 @@ export default function SuperAdminDashboard() {
           { label: "Dashboard", description: "Quick Summaries & Visual Insights at a Glance", href: "/dashboard", icon: BarChart3 },
           { label: "Add Slots", description: "Add slots for the locations", href: "/slot-generator", icon: CalendarPlus },
           { label: "Manual Booking", description: "Enter customer info and create ticket", href: "/ticket-booking", icon: ClipboardList },
-          { label: "Verify / Check-in", description: "Verify and check-in tickets", href: "/ticket-verification", icon: QrCode },
           { label: "Book a Ticket", description: "Book tickets for customers", href: "/location", icon: Ticket },
           { label: "Employee Attendance", description: "View and download employee attendance", href: "/attendance", icon: Users },
         ]}
