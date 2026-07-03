@@ -37,12 +37,15 @@ function PhotoCell({ url, name }: { url: string; name: string }) {
   );
 }
 
+const PAGE_SIZE = 50;
+
 function Attendance() {
   const router = useRouter();
   const [start, setStart] = useState(daysAgoISO(30));
   const [end, setEnd] = useState(daysAgoISO(0));
   const [rows, setRows] = useState<FieldVisit[]>([]);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(0);
 
   const load = useMemo(
     () => async () => {
@@ -62,6 +65,14 @@ function Attendance() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Reset to the first page whenever the result set changes.
+  useEffect(() => {
+    setPage(0);
+  }, [rows]);
+
+  const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const pageRows = rows.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
 
   const downloadExcel = () => {
     if (rows.length === 0) return;
@@ -143,7 +154,7 @@ function Attendance() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r) => (
+                {pageRows.map((r) => (
                   <tr key={r.id} className="hover:bg-[#96FF00]/10 align-top">
                     <td className="px-3 py-2 border-b border-[#333]">
                       <PhotoCell url={r.photoUrl} name={r.employeeName} />
@@ -189,6 +200,32 @@ function Attendance() {
                 ))}
               </tbody>
             </table>
+
+            {/* Pagination */}
+            <div className="flex items-center justify-between mt-4 text-white text-sm">
+              <span className="text-white/60">
+                Showing {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, rows.length)} of {rows.length}
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                  disabled={page === 0}
+                  className="px-3 py-1 rounded bg-[#595959] disabled:opacity-40"
+                >
+                  Prev
+                </button>
+                <span className="text-white/70">
+                  Page {page + 1} of {pageCount}
+                </span>
+                <button
+                  onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+                  disabled={page >= pageCount - 1}
+                  className="px-3 py-1 rounded bg-[#595959] disabled:opacity-40"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
