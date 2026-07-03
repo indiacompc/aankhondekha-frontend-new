@@ -5,7 +5,6 @@
 import { useState, useRef, useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import Navbar from "@/components/Navbar";
 import AttractionsSection from "@/components/AttractionsSection";
 import Testimonial from "@/components/Testimonial";
 import Footer from "@/components/Footer";
@@ -299,8 +298,6 @@ const HomeClient = () => {
 
   return (
     <div className="bg-black min-h-screen">
-      <Navbar />
-
       {/* Video Section with Overlays */}
       <motion.div
         className="relative"
