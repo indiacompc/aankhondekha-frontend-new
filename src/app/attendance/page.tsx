@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, MapPin } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import { AdminGuard } from "@/components/AdminGuard";
 import { getFieldVisitsByDateRange } from "@/lib/db";
@@ -17,9 +18,28 @@ function daysAgoISO(n: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+/** Photo thumbnail; opens full image in a new tab, falls back if broken. */
+function PhotoCell({ url, name }: { url: string; name: string }) {
+  const [broken, setBroken] = useState(false);
+  if (!url || broken) {
+    return <span className="text-white/40 text-xs">No image</span>;
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={url}
+      alt={name}
+      onError={() => setBroken(true)}
+      onClick={() => window.open(url, "_blank", "noopener,noreferrer")}
+      className="w-14 h-14 rounded object-cover cursor-pointer hover:scale-105 transition"
+      title="Click to view full image"
+    />
+  );
+}
+
 function Attendance() {
   const router = useRouter();
-  const [start, setStart] = useState(daysAgoISO(6));
+  const [start, setStart] = useState(daysAgoISO(30));
   const [end, setEnd] = useState(daysAgoISO(0));
   const [rows, setRows] = useState<FieldVisit[]>([]);
   const [loading, setLoading] = useState(false);
@@ -43,9 +63,41 @@ function Attendance() {
     load();
   }, [load]);
 
+  const downloadExcel = () => {
+    if (rows.length === 0) return;
+    const data = rows.map((r) => ({
+      "Employee Name": r.employeeName,
+      Mobile: r.employeeMobile,
+      Category: r.category,
+      "Date & Time": new Date(r.timestamp).toLocaleString(),
+      Latitude: r.latitude,
+      Longitude: r.longitude,
+      "Location Link": `https://www.google.com/maps?q=${r.latitude},${r.longitude}`,
+      "Field Visit": r.isFieldVisit ? "Yes" : "No",
+      "Customer Name": r.customerName || "",
+      "Customer Address": r.customerAddress || "",
+      Pincode: r.pincode || "",
+      Notes: r.notes || "",
+      "Photo URL": r.photoUrl || "",
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Attendance");
+    const buffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Attendance_${start}_to_${end}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="min-h-screen bg-[#121212] p-6">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-screen-xl mx-auto">
         <div className="mb-6 flex items-center">
           <button
             onClick={() => router.back()}
@@ -57,12 +109,19 @@ function Attendance() {
           <h1 className="ml-5 font-bold text-[24px] text-white">Attendance</h1>
         </div>
 
-        <div className="flex flex-wrap gap-3 mb-6">
+        <div className="flex flex-wrap items-center gap-3 mb-6">
           <input type="date" value={start} max={end} onChange={(e) => setStart(e.target.value)} className={inputClass} />
           <input type="date" value={end} min={start} onChange={(e) => setEnd(e.target.value)} className={inputClass} />
           <span className="text-white/60 text-sm self-center">
             {rows.length} record{rows.length === 1 ? "" : "s"}
           </span>
+          <button
+            onClick={downloadExcel}
+            disabled={rows.length === 0}
+            className="ml-auto bg-[#96FF00] text-black font-semibold px-4 py-2 rounded hover:bg-lime-300 transition disabled:opacity-50"
+          >
+            Download Excel
+          </button>
         </div>
 
         {loading ? (
@@ -70,58 +129,66 @@ function Attendance() {
         ) : rows.length === 0 ? (
           <p className="text-white/60">No attendance records in this range.</p>
         ) : (
-          <div className="space-y-3">
-            {rows.map((r) => (
-              <div
-                key={r.id}
-                className="bg-[#595959] rounded-xl p-4 text-white flex gap-4"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={r.photoUrl}
-                  alt={r.employeeName}
-                  className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-semibold truncate">{r.employeeName}</p>
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded-full ${
-                        r.category === "check-in"
-                          ? "bg-emerald-500/20 text-emerald-300"
-                          : "bg-blue-500/20 text-blue-300"
-                      }`}
-                    >
-                      {r.category}
-                    </span>
-                  </div>
-                  <p className="text-white/60 text-xs">{r.employeeMobile}</p>
-                  <p className="text-white/60 text-xs">
-                    {new Date(r.timestamp).toLocaleString()}
-                  </p>
-                  <a
-                    href={`https://www.google.com/maps?q=${r.latitude},${r.longitude}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-[#96FF00] text-xs mt-1 hover:underline"
-                  >
-                    <MapPin className="w-3.5 h-3.5" /> View location
-                  </a>
-
-                  {r.isFieldVisit && (
-                    <div className="mt-2 text-xs bg-[#1c1c1c] rounded-lg p-2">
-                      <p className="text-white/80 font-medium">
-                        Field visit: {r.customerName}
-                      </p>
-                      <p className="text-white/60">
-                        {r.customerAddress} — {r.pincode}
-                      </p>
-                      {r.notes && <p className="text-white/50 mt-1">{r.notes}</p>}
-                    </div>
+          <div className="bg-[#1c1c1c] border border-[#96FF00] rounded p-4 overflow-x-auto">
+            <table className="min-w-full text-sm border border-[#2C410E] text-white">
+              <thead className="bg-[#2C410E]">
+                <tr>
+                  {["Photo", "Employee", "Mobile", "Category", "Date & Time", "Location", "Field Visit", "Customer", "Address", "Pincode", "Notes"].map(
+                    (col) => (
+                      <th key={col} className="px-3 py-2 border-b border-[#4CAF50] text-left whitespace-nowrap">
+                        {col}
+                      </th>
+                    ),
                   )}
-                </div>
-              </div>
-            ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r) => (
+                  <tr key={r.id} className="hover:bg-[#96FF00]/10 align-top">
+                    <td className="px-3 py-2 border-b border-[#333]">
+                      <PhotoCell url={r.photoUrl} name={r.employeeName} />
+                    </td>
+                    <td className="px-3 py-2 border-b border-[#333] whitespace-nowrap">{r.employeeName}</td>
+                    <td className="px-3 py-2 border-b border-[#333] whitespace-nowrap">{r.employeeMobile}</td>
+                    <td className="px-3 py-2 border-b border-[#333] whitespace-nowrap">
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-full ${
+                          r.category === "check-in"
+                            ? "bg-emerald-500/20 text-emerald-300"
+                            : r.category === "check-out"
+                              ? "bg-blue-500/20 text-blue-300"
+                              : "bg-amber-500/20 text-amber-300"
+                        }`}
+                      >
+                        {r.category}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2 border-b border-[#333] whitespace-nowrap">
+                      {new Date(r.timestamp).toLocaleString()}
+                    </td>
+                    <td className="px-3 py-2 border-b border-[#333] whitespace-nowrap">
+                      <a
+                        href={`https://www.google.com/maps?q=${r.latitude},${r.longitude}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[#96FF00] hover:underline"
+                      >
+                        View map
+                      </a>
+                    </td>
+                    <td className="px-3 py-2 border-b border-[#333] whitespace-nowrap">{r.isFieldVisit ? "Yes" : "No"}</td>
+                    <td className="px-3 py-2 border-b border-[#333] whitespace-nowrap">{r.customerName || "-"}</td>
+                    <td className="px-3 py-2 border-b border-[#333] max-w-[220px] truncate" title={r.customerAddress}>
+                      {r.customerAddress || "-"}
+                    </td>
+                    <td className="px-3 py-2 border-b border-[#333] whitespace-nowrap">{r.pincode || "-"}</td>
+                    <td className="px-3 py-2 border-b border-[#333] max-w-[200px] truncate" title={r.notes}>
+                      {r.notes || "-"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
