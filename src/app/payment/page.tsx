@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { bookTicket, createGiftTicket } from "@/lib/db";
 import { exGst, gstInclusive, todayISO, totalFor } from "@/lib/booking";
 import { digitsOnly, isValidMobile, isValidEmail } from "@/lib/phone";
+import { notify } from "@/lib/notify";
 import { useBooking } from "@/components/BookingProvider";
 import { useCustomer } from "@/components/CustomerProvider";
 
@@ -75,6 +76,12 @@ export default function PaymentPage() {
           receiverMobile: `+91${digitsOnly(rMobile, 10)}`,
           receiverEmail: rEmail.trim() || undefined,
         });
+        // Notify the recipient (WhatsApp + SMS) that they've received a gift.
+        notify({
+          type: "gift",
+          mobile: `+91${digitsOnly(rMobile, 10)}`,
+          name: customer.name || "Someone",
+        });
         toast.success("Gift ticket created");
         router.push(`/confirmation?giftId=${giftId}`);
       } else {
@@ -90,6 +97,17 @@ export default function PaymentPage() {
           totalAmount: total,
           paymentOption: "online",
           paymentStatus: "paid",
+        });
+        // Notify the customer (WhatsApp + SMS) that the booking is confirmed.
+        notify({
+          type: "booking",
+          mobile: customer.mobile,
+          date: new Date(date!).toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          }),
+          time: slot!.slotTime,
         });
         toast.success("Booking confirmed");
         router.push(`/confirmation?ticketId=${ticketId}`);
