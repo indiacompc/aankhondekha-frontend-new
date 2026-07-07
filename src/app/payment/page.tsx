@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowLeft, CreditCard, DollarSign, Gift, Receipt, Smartphone, Check } from "lucide-react";
+import { ArrowLeft, CreditCard, DollarSign, Gift, Receipt, Check } from "lucide-react";
 import { toast } from "sonner";
 import { bookTicket, createGiftTicket } from "@/lib/db";
 import { exGst, gstInclusive, todayISO, totalFor } from "@/lib/booking";
@@ -26,7 +26,7 @@ export default function PaymentPage() {
   const [processing, setProcessing] = useState(false);
 
   // Payment method — admins can also take Cash / QR / (Ops+Super) Free Ticket.
-  const [selectedPayment, setSelectedPayment] = useState<string>("online");
+  const [selectedPayment, setSelectedPayment] = useState<string>("cash");
   const [showQRPopup, setShowQRPopup] = useState(false);
 
   // Gift recipient details
@@ -55,18 +55,14 @@ export default function PaymentPage() {
 
   const giftValid = rName.trim().length >= 2 && isValidMobile(rMobile);
 
-  // Payment methods: everyone can pay Online; admins can also record Cash/QR,
-  // and Ops/Super Admins can issue a Free Ticket. Mirrors the old app.
-  const isAdmin = !!admin;
+  // Payment methods: Cash / QR for everyone; Ops/Super Admins can issue a Free
+  // Ticket. Online (Razorpay) is not enabled yet.
   const paymentMethods: { id: string; name: string; icon: React.ReactNode }[] = [
-    { id: "online", name: "Online", icon: <Smartphone className="h-5 w-5 text-white" /> },
+    { id: "cash", name: "Cash Payment", icon: <DollarSign className="h-5 w-5 text-white" /> },
+    { id: "qr", name: "QR Payment", icon: <CreditCard className="h-5 w-5 text-white" /> },
   ];
-  if (isAdmin) {
-    paymentMethods.push({ id: "cash", name: "Cash Payment", icon: <DollarSign className="h-5 w-5 text-white" /> });
-    paymentMethods.push({ id: "qr", name: "QR Payment", icon: <CreditCard className="h-5 w-5 text-white" /> });
-    if (admin?.role === "Ops Admin" || admin?.role === "Super Admin") {
-      paymentMethods.push({ id: "free", name: "Free Ticket", icon: <Receipt className="h-5 w-5 text-white" /> });
-    }
+  if (admin?.role === "Ops Admin" || admin?.role === "Super Admin") {
+    paymentMethods.push({ id: "free", name: "Free Ticket", icon: <Receipt className="h-5 w-5 text-white" /> });
   }
 
   const qrSrc =
@@ -79,9 +75,8 @@ export default function PaymentPage() {
   /** Map the selected method to the stored PaymentOption and charged amount. */
   const resolvePayment = (): { option: PaymentOption; amount: number } => {
     if (selectedPayment === "free") return { option: "Free Ticket", amount: 0 };
-    if (selectedPayment === "cash") return { option: "cash", amount: total };
     if (selectedPayment === "qr") return { option: "qr", amount: total };
-    return { option: "online", amount: total };
+    return { option: "cash", amount: total };
   };
 
   const selectPayment = (id: string) => {
@@ -302,12 +297,6 @@ export default function PaymentPage() {
             </div>
           </div>
 
-          {selectedPayment === "online" && (
-            <div className="mt-2 rounded-lg bg-[#96FF00]/10 text-[#96FF00] text-xs p-3">
-              Online payment is mocked in this build — Razorpay can be wired in later.
-            </div>
-          )}
-
           <button
             onClick={pay}
             disabled={processing}
@@ -316,13 +305,11 @@ export default function PaymentPage() {
             <CreditCard className="w-4 h-4" />
             {processing
               ? "Processing…"
-              : selectedPayment === "cash"
-                ? "Confirm Cash Payment"
-                : selectedPayment === "qr"
-                  ? "Confirm QR Payment"
-                  : selectedPayment === "free"
-                    ? "Confirm Free Ticket"
-                    : `Pay ₹${total}`}
+              : selectedPayment === "qr"
+                ? "Confirm QR Payment"
+                : selectedPayment === "free"
+                  ? "Confirm Free Ticket"
+                  : "Confirm Cash Payment"}
           </button>
         </motion.div>
       </div>
