@@ -321,7 +321,8 @@ const HomeClient = () => {
           </a>
         </motion.div>
 
-        {/* Book Now - Top Right */}
+        {/* Book Now - Top Right (disabled: public online booking not live) */}
+        {/*
         <motion.div
           className="absolute top-6 right-6 z-[100] cursor-pointer"
           whileHover={{ scale: 1.05 }}
@@ -337,6 +338,7 @@ const HomeClient = () => {
             className="w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-lg hover:brightness-110 transition-all duration-300"
           />
         </motion.div>
+        */}
 
         <div className="relative">
           <iframe

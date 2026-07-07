@@ -76,9 +76,10 @@ export default function About() {
               every place is within reach.
             </p>
 
+            {/* Book Now (disabled: public online booking not live)
             <div className="flex flex-wrap gap-4 mt-6">
               <Link href="/location">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {/* eslint-disable-next-line @next/next/no-img-element * /}
                 <img
                   src="/about/book_now_about_us.png"
                   alt="Book Now"
@@ -86,6 +87,7 @@ export default function About() {
                 />
               </Link>
             </div>
+            */}
           </div>
 
           {/* Right Column: Images */}
