@@ -476,12 +476,14 @@ const HomeClient = () => {
                 filled with immersive VR exhibitions and stories from Madhya
                 Pradesh&apos;s rich heritage.
               </p>
+              {/* Booking CTA disabled: public online booking not live
               <button
                 className="bg-gradient-to-r from-[#99160B] to-[#B91C1C] hover:from-[#B91C1C] hover:to-[#99160B] text-white font-semibold py-3 px-6 rounded-lg transition-all shadow-lg hover:shadow-xl"
                 onClick={() => router.push("/location")}
               >
                 Visit Bhopal Center
               </button>
+              */}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -510,12 +512,14 @@ const HomeClient = () => {
                 Experience Raja Mahal like never before with 8K 360° VR films that
                 let you walk through ancient palaces, temples, and royal stories.
               </p>
+              {/* Booking CTA disabled: public online booking not live
               <button
                 className="bg-gradient-to-r from-[#99160B] to-[#B91C1C] text-white font-semibold py-3 px-6 rounded-lg shadow-lg"
                 onClick={() => router.push("/location")}
               >
                 Visit Orchha Center
               </button>
+              */}
             </div>
           </div>
 
@@ -529,12 +533,14 @@ const HomeClient = () => {
                 water sports, jet skiing, and underwater exploration — all in
                 breathtaking detail.
               </p>
+              {/* Booking CTA disabled: public online booking not live
               <button
                 className="bg-gradient-to-r from-[#99160B] to-[#B91C1C] text-white font-semibold py-3 px-6 rounded-lg shadow-lg"
                 onClick={() => router.push("/location")}
               >
                 Visit Boat Club Center
               </button>
+              */}
             </div>
 
             <div className="grid grid-cols-2 gap-10">
@@ -562,12 +568,14 @@ const HomeClient = () => {
                 immersive VR storytelling that brings the sacred Narmada
                 riverfront to life.
               </p>
+              {/* Booking CTA disabled: public online booking not live
               <button
                 className="bg-gradient-to-r from-[#99160B] to-[#B91C1C] text-white font-semibold py-3 px-6 rounded-lg shadow-lg"
                 onClick={() => router.push("/location")}
               >
                 Visit Maheshwar Center
               </button>
+              */}
             </div>
           </div>
         </div>
@@ -615,12 +623,11 @@ const HomeClient = () => {
       >
         <LazyVideo
           src="/vid/bootom_video_just_above_footer.mp4"
-          className="w-full h-full cursor-pointer"
+          className="w-full h-full"
           autoPlay
           loop
           muted
           controls={false}
-          onClick={() => router.push("/location")}
         />
       </motion.div>
 
