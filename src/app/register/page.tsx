@@ -11,7 +11,6 @@ import {
   Lock,
   ArrowLeft,
   ArrowRight,
-  Mail,
   Users,
   Calendar,
 } from "lucide-react";
@@ -22,7 +21,7 @@ import {
 } from "firebase/auth";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
-import { toE164, digitsOnly, isValidMobile, isValidEmail } from "@/lib/phone";
+import { toE164, digitsOnly, isValidMobile } from "@/lib/phone";
 import { useCustomer } from "@/components/CustomerProvider";
 
 const GENDERS = ["Male", "Female", "Other"];
@@ -36,7 +35,6 @@ export default function RegisterPage() {
   const { setCustomer } = useCustomer();
 
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [gender, setGender] = useState("");
   const [ageGroup, setAgeGroup] = useState("");
@@ -49,10 +47,8 @@ export default function RegisterPage() {
 
   // Inline validation
   const nameValid = name.trim().length >= 2;
-  const emailValid = isValidEmail(email);
   const phoneValid = isValidMobile(phone);
-  const detailsValid =
-    nameValid && emailValid && !!gender && !!ageGroup && phoneValid;
+  const detailsValid = nameValid && !!gender && !!ageGroup && phoneValid;
 
   const getRecaptcha = () => {
     if (!recaptchaRef.current) {
@@ -65,7 +61,6 @@ export default function RegisterPage() {
 
   const handleSendOtp = async () => {
     if (!nameValid) return toast.error("Please enter your full name");
-    if (!emailValid) return toast.error("Please enter a valid email address");
     if (!gender || !ageGroup)
       return toast.error("Please select gender and age group");
     const e164 = toE164(phone);
@@ -116,7 +111,7 @@ export default function RegisterPage() {
       const customer = {
         uid,
         name,
-        email,
+        email: "",
         mobile: e164,
         gender,
         ageGroup,
@@ -235,31 +230,6 @@ export default function RegisterPage() {
                   ))}
                 </select>
               </div>
-            </div>
-
-            {/* Email */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-white mb-1">
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-300 h-4 w-4" />
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={inputClass}
-                  placeholder="Enter email"
-                  disabled={otpSent}
-                  required
-                />
-              </div>
-              {email && !emailValid && (
-                <p className="text-red-300 text-xs mt-1">
-                  Enter a valid email address
-                </p>
-              )}
             </div>
 
             {/* Mobile Number */}
