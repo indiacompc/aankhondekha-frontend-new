@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import GlassCard from "@/components/GlassCard";
 import PageTransition from "@/components/PageTransition";
 import { useAuth } from "@/components/AuthProvider";
+import { useCustomer } from "@/components/CustomerProvider";
+import { useBooking } from "@/components/BookingProvider";
 
 export interface HubItem {
   label: string;
@@ -19,11 +21,26 @@ export interface HubItem {
 export function AdminHub({ items }: { title?: string; items: HubItem[] }) {
   const router = useRouter();
   const { logout } = useAuth();
+  const { clearCustomer } = useCustomer();
+  const { clearBooking } = useBooking();
 
   const handleLogout = async () => {
     await logout();
     toast.success("Logged out successfully");
     router.replace("/admin");
+  };
+
+  /**
+   * Starting a booking from the hub always begins a fresh customer session, so
+   * the previous walk-in's details are never reused: the flow asks the next
+   * customer to register / log in again.
+   */
+  const openItem = (href: string) => {
+    if (href === "/location") {
+      clearCustomer();
+      clearBooking();
+    }
+    router.push(href);
   };
 
   return (
@@ -62,7 +79,7 @@ export function AdminHub({ items }: { title?: string; items: HubItem[] }) {
             <GlassCard
               key={href + label}
               className="cursor-pointer border-transparent hover:border-[#96FF00] hover:bg-[#2C410E] transition-all duration-300 text-white"
-              onClick={() => router.push(href)}
+              onClick={() => openItem(href)}
               delay={index}
             >
               <div className="flex items-center">
