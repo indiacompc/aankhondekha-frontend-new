@@ -72,15 +72,21 @@ async function importEvents() {
 }
 
 async function importTicketTypes() {
+  // Drop any stale ticketTypes (e.g. old random-id docs) so only the legacy-id
+  // docs remain; the ids are deterministic, so re-imports are idempotent.
   if (!DRY) {
+    const keep = new Set(data.ticketTypes.map((t) => t._id));
     const existing = await db.collection("ticketTypes").get();
-    const del = db.batch();
-    existing.forEach((d) => del.delete(d.ref));
-    await del.commit();
-    console.log(`  cleared ${existing.size} existing ticketTypes`);
+    const stale = existing.docs.filter((d) => !keep.has(d.id));
+    if (stale.length) {
+      const del = db.batch();
+      stale.forEach((d) => del.delete(d.ref));
+      await del.commit();
+      console.log(`  cleared ${stale.length} stale ticketTypes`);
+    }
   }
   const writes = data.ticketTypes.map((t) => ({
-    ref: db.collection("ticketTypes").doc(),
+    ref: db.collection("ticketTypes").doc(t._id),
     data: t.data,
   }));
   await commitInBatches(writes, "ticketTypes");
@@ -95,8 +101,27 @@ async function importDocs(key, collection) {
 }
 
 async function importFieldVisits() {
+  // Remove previously-migrated docs that used random ids (they carry _source),
+  // so re-imports don't duplicate. Records created by the app have no _source
+  // and are left untouched.
+  if (!DRY) {
+    const keep = new Set(data.fieldVisits.map((r) => r._id));
+    let removed = 0;
+    for (const src of ["employee_attendance", "field_visits"]) {
+      const snap = await db.collection("fieldVisits").where("_source", "==", src).get();
+      const stale = snap.docs.filter((d) => !keep.has(d.id));
+      for (let i = 0; i < stale.length; i += 450) {
+        const batch = db.batch();
+        stale.slice(i, i + 450).forEach((d) => batch.delete(d.ref));
+        await batch.commit();
+      }
+      removed += stale.length;
+    }
+    if (removed) console.log(`  removed ${removed} old random-id fieldVisits`);
+  }
+
   const writes = data.fieldVisits.map((r) => ({
-    ref: db.collection("fieldVisits").doc(),
+    ref: db.collection("fieldVisits").doc(r._id),
     data: r.data,
   }));
   await commitInBatches(writes, "fieldVisits");
