@@ -9,12 +9,14 @@ import { getEvents } from "@/lib/db";
 import type { EventDoc } from "@/lib/types";
 import { useBooking } from "@/components/BookingProvider";
 import { useCustomer } from "@/components/CustomerProvider";
+import { useAuth } from "@/components/AuthProvider";
 import BackButton from "@/components/BackButton";
 
 export default function LocationSelection() {
   const router = useRouter();
   const { event, setEvent } = useBooking();
   const { customer } = useCustomer();
+  const { admin } = useAuth();
   const [events, setEvents] = useState<EventDoc[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -25,9 +27,37 @@ export default function LocationSelection() {
       .finally(() => setLoading(false));
   }, []);
 
+  // A Reception Admin is tied to a single location; Ops/Super Admins and
+  // customers may pick any.
+  const restrictedEventId =
+    admin?.role === "Reception Admin" && admin.eventId ? admin.eventId : null;
+
+  const visibleEvents = restrictedEventId
+    ? events.filter((e) => e.eventId === restrictedEventId)
+    : events;
+
+  // Auto-select the only allowed location (also clears a stale selection that
+  // belongs to a different location).
+  useEffect(() => {
+    if (!restrictedEventId || visibleEvents.length !== 1) return;
+    if (event?.eventId !== restrictedEventId) setEvent(visibleEvents[0]);
+  }, [restrictedEventId, visibleEvents, event, setEvent]);
+
+  const selectEvent = (e: EventDoc) => {
+    if (restrictedEventId && e.eventId !== restrictedEventId) {
+      toast.error("You don't have rights to select this location");
+      return;
+    }
+    setEvent(e);
+  };
+
   const handleContinue = () => {
     if (!event) {
       toast.error("Please select a location to continue");
+      return;
+    }
+    if (restrictedEventId && event.eventId !== restrictedEventId) {
+      toast.error("You don't have rights to select this location");
       return;
     }
     router.push(customer ? "/ticket-type" : "/register");
@@ -45,9 +75,15 @@ export default function LocationSelection() {
 
         {loading ? (
           <p className="text-white/70">Loading locations…</p>
+        ) : visibleEvents.length === 0 ? (
+          <p className="text-white/70">
+            {restrictedEventId
+              ? "No location is assigned to your account. Please contact a Super Admin."
+              : "No locations available."}
+          </p>
         ) : (
           <div className="space-y-4">
-            {events.map((e, i) => {
+            {visibleEvents.map((e, i) => {
               const selected = event?.eventId === e.eventId;
               return (
                 <motion.button
@@ -55,7 +91,7 @@ export default function LocationSelection() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: i * 0.05 }}
-                  onClick={() => setEvent(e)}
+                  onClick={() => selectEvent(e)}
                   className={`w-full flex items-center gap-4 rounded-xl p-4 shadow-lg transition-all text-left ${
                     selected
                       ? "bg-[#595959] border-2 border-[#96FF00]"
