@@ -87,7 +87,8 @@ export default function LoginPage() {
         router.push("/register");
         return;
       }
-      setCustomer(snap.data() as Customer);
+      // Stamp the uid from the auth session; older/migrated docs don't store it.
+      setCustomer({ ...(snap.data() as Customer), uid: cred.user.uid });
       toast.success("Logged in");
       router.push(event ? "/ticket-type" : "/");
     } catch (err) {

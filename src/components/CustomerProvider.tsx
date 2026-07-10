@@ -32,18 +32,36 @@ const CustomerContext = createContext<CustomerContextValue>({
 
 const STORAGE_KEY = "customerDetails";
 
+/**
+ * The old (Vite) site used this same localStorage key on aankhondekha.com but
+ * stored a different shape (`mobile_no`, no `uid`). Casting that blindly leaves
+ * `uid` undefined, which Firestore rejects when the ticket is written. Only
+ * accept a profile that has the fields the booking flow actually needs.
+ */
+function isValidCustomer(value: unknown): value is Customer {
+  if (!value || typeof value !== "object") return false;
+  const c = value as Record<string, unknown>;
+  return (
+    typeof c.uid === "string" &&
+    c.uid.length > 0 &&
+    typeof c.mobile === "string" &&
+    c.mobile.length > 0
+  );
+}
+
 export function CustomerProvider({ children }: { children: ReactNode }) {
   const [customer, setCustomerState] = useState<Customer | null>(null);
 
-  // Hydrate from localStorage on mount.
+  // Hydrate from localStorage on mount, discarding anything malformed or stale.
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        setCustomerState(JSON.parse(stored) as Customer);
-      } catch {
-        localStorage.removeItem(STORAGE_KEY);
-      }
+    if (!stored) return;
+    try {
+      const parsed: unknown = JSON.parse(stored);
+      if (isValidCustomer(parsed)) setCustomerState(parsed);
+      else localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      localStorage.removeItem(STORAGE_KEY);
     }
   }, []);
 

@@ -117,6 +117,12 @@ export interface BookingInput {
  * that re-reads the slot to prevent overbooking. Returns the new ticket id.
  */
 export async function bookTicket(input: BookingInput): Promise<string> {
+  // Firestore rejects undefined values; fail early with a usable message
+  // instead of an opaque "Unsupported field value: undefined".
+  if (!input.uid || !input.mobile) {
+    throw new Error("Customer session is incomplete. Please register again.");
+  }
+
   const slotRef = doc(db, "slots", input.slot.id);
   const ticketRef = doc(collection(db, "tickets"));
   const totalRequested = input.quantity + input.complimentaryTicket;

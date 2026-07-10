@@ -39,10 +39,11 @@ export default function PaymentPage() {
     const missingCore = !event || !ticketType;
     const missingSlot = !isGift && (!slot || !date);
     if (missingCore || missingSlot) router.replace("/location");
-    else if (!customer) router.replace("/register");
+    // A profile without a uid can't own a ticket — send them to register.
+    else if (!customer?.uid) router.replace("/register");
   }, [event, ticketType, slot, date, isGift, customer, router]);
 
-  if (!event || !ticketType || !customer) return null;
+  if (!event || !ticketType || !customer?.uid) return null;
   if (!isGift && (!slot || !date)) return null;
 
   const total = totalFor(ticketType.price, quantity);
