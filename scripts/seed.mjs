@@ -54,7 +54,7 @@ const TICKET_TYPES = [
 // Slot generation patterns per event.
 const SLOT_PATTERNS = {
   1: { startMin: 9 * 60, endMin: 22 * 60, intervalMin: 15, capacity: 6 },
-  3: { startMin: 9 * 60, endMin: 22 * 60, intervalMin: 15, capacity: 10 },
+  3: { startMin: 12 * 60, endMin: 22 * 60, intervalMin: 15, capacity: 10 },
 };
 
 const SUPER_ADMIN = {

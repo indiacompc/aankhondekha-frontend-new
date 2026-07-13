@@ -18,7 +18,7 @@ const root = join(__dirname, "..");
 // Slot patterns per event (must match src/lib/slots.ts).
 const SLOT_PATTERNS = {
   "1": { startMin: 9 * 60, endMin: 22 * 60, intervalMin: 15, capacity: 6 },
-  "3": { startMin: 9 * 60, endMin: 22 * 60, intervalMin: 15, capacity: 10 },
+  "3": { startMin: 12 * 60, endMin: 22 * 60, intervalMin: 15, capacity: 10 },
 };
 
 function findServiceAccount() {
