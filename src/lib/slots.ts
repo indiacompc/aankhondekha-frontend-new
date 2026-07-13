@@ -1,8 +1,8 @@
 /**
  * Slot generation patterns per event. Derived from the real production data:
  * both locations run 15-min slots from 09:00 to 22:00 (52 slots/day).
- *   Orchha (1):                    15-min, 09:00–22:00, cap 6
- *   Wind & Waves - State Museum (3): 15-min, 09:00–22:00, cap 10
+ *   Orchha (1):        15-min, 09:00–22:00, cap 6
+ *   MPT Boat Club (3): 15-min, 09:00–22:00, cap 10
  */
 
 export interface SlotPattern {

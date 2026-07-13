@@ -40,7 +40,7 @@ const auth = getAuth();
 
 const EVENTS = [
   { eventId: "1", location: "Orchha" },
-  { eventId: "3", location: "Wind & Waves - State Museum" },
+  { eventId: "3", location: "MPT Boat Club" },
 ];
 
 // Sample ticket types per event. `price` is the FINAL, GST-inclusive price the
