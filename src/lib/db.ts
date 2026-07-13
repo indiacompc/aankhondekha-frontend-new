@@ -91,6 +91,38 @@ export async function getTicketById(id: string): Promise<Ticket | null> {
   return snap.exists() ? ({ id: snap.id, ...snap.data() } as Ticket) : null;
 }
 
+/**
+ * A customer's own bookings + gift tickets (as sender or recipient), for the
+ * profile page. Queried by mobile; newest first.
+ */
+export async function getTicketsByMobile(
+  mobile: string,
+): Promise<{ tickets: Ticket[]; giftTickets: GiftTicket[] }> {
+  const ticketSnap = await getDocs(
+    query(collection(db, "tickets"), where("mobile", "==", mobile)),
+  );
+  const tickets = ticketSnap.docs.map((d) => ({ id: d.id, ...d.data() }) as Ticket);
+
+  // Gift tickets the user sent or received (two equality queries, then merge).
+  const [sent, received] = await Promise.all([
+    getDocs(query(collection(db, "giftTickets"), where("senderMobile", "==", mobile))),
+    getDocs(query(collection(db, "giftTickets"), where("receiverMobile", "==", mobile))),
+  ]);
+  const byId = new Map<string, GiftTicket>();
+  for (const d of [...sent.docs, ...received.docs]) {
+    byId.set(d.id, { id: d.id, ...d.data() } as GiftTicket);
+  }
+
+  const rank = (t: { createdAt?: unknown; bookingDate?: string }) =>
+    (t.bookingDate ?? "") + "";
+  tickets.sort((a, b) => rank(b).localeCompare(rank(a)));
+  const giftTickets = Array.from(byId.values()).sort((a, b) =>
+    rank(b).localeCompare(rank(a)),
+  );
+
+  return { tickets, giftTickets };
+}
+
 /* ----------------------------- writes ----------------------------- */
 
 export interface BookingInput {

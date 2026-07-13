@@ -51,7 +51,9 @@ service cloud.firestore {
       allow create: if signedIn()
         && (request.resource.data.uid == request.auth.uid || isAdmin());
       allow read: if signedIn()
-        && (resource.data.uid == request.auth.uid || isAdmin());
+        && (resource.data.uid == request.auth.uid
+            || resource.data.mobile == request.auth.token.phone_number
+            || isAdmin());
       allow update: if isAdmin();
     }
 
@@ -75,7 +77,10 @@ service cloud.firestore {
       allow create: if signedIn()
         && (request.resource.data.senderUid == request.auth.uid || isAdmin());
       allow read: if signedIn()
-        && (resource.data.senderUid == request.auth.uid || isAdmin());
+        && (resource.data.senderUid == request.auth.uid
+            || resource.data.senderMobile == request.auth.token.phone_number
+            || resource.data.receiverMobile == request.auth.token.phone_number
+            || isAdmin());
       allow update: if isAdmin();
     }
   }

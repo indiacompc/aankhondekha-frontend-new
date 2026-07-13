@@ -104,7 +104,8 @@ export default function LoginPage() {
       // Stamp the uid from the auth session; older/migrated docs don't store it.
       setCustomer({ ...(snap.data() as Customer), uid: cred.user.uid });
       toast.success("Logged in");
-      router.push(event ? "/ticket-type" : "/");
+      // Mid-booking → continue the flow; otherwise show their tickets.
+      router.push(event ? "/ticket-type" : "/profile");
     } catch (err) {
       console.error(err);
       toast.error("Invalid or expired OTP");
