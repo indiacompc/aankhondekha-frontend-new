@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -50,14 +50,33 @@ export default function RegisterPage() {
   const phoneValid = isValidMobile(phone);
   const detailsValid = nameValid && !!gender && !!ageGroup && phoneValid;
 
+  // Tear down any previous reCAPTCHA widget so a fresh one can render without
+  // hitting "reCAPTCHA has already been rendered in this element".
+  const resetRecaptcha = () => {
+    try {
+      recaptchaRef.current?.clear();
+    } catch {
+      /* ignore */
+    }
+    recaptchaRef.current = null;
+    const el = document.getElementById("recaptcha-container");
+    if (el) el.innerHTML = "";
+  };
+
   const getRecaptcha = () => {
     if (!recaptchaRef.current) {
+      const el = document.getElementById("recaptcha-container");
+      if (el) el.innerHTML = "";
       recaptchaRef.current = new RecaptchaVerifier(auth, "recaptcha-container", {
         size: "invisible",
       });
     }
     return recaptchaRef.current;
   };
+
+  // Clear the widget when leaving the page (otherwise returning here re-renders
+  // into a container that already holds a reCAPTCHA and throws).
+  useEffect(() => resetRecaptcha, []);
 
   const handleSendOtp = async () => {
     if (!nameValid) return toast.error("Please enter your full name");
@@ -84,8 +103,7 @@ export default function RegisterPage() {
         err instanceof Error ? err.message : "Failed to send OTP. Try again.",
       );
       // Reset the verifier so the next attempt gets a fresh challenge.
-      recaptchaRef.current?.clear();
-      recaptchaRef.current = null;
+      resetRecaptcha();
     } finally {
       setLoading(false);
     }

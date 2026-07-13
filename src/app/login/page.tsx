@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -34,14 +34,29 @@ export default function LoginPage() {
   const recaptchaRef = useRef<RecaptchaVerifier | null>(null);
   const confirmationRef = useRef<ConfirmationResult | null>(null);
 
+  const resetRecaptcha = () => {
+    try {
+      recaptchaRef.current?.clear();
+    } catch {
+      /* ignore */
+    }
+    recaptchaRef.current = null;
+    const el = document.getElementById("recaptcha-login");
+    if (el) el.innerHTML = "";
+  };
+
   const getRecaptcha = () => {
     if (!recaptchaRef.current) {
+      const el = document.getElementById("recaptcha-login");
+      if (el) el.innerHTML = "";
       recaptchaRef.current = new RecaptchaVerifier(auth, "recaptcha-login", {
         size: "invisible",
       });
     }
     return recaptchaRef.current;
   };
+
+  useEffect(() => resetRecaptcha, []);
 
   const phoneValid = isValidMobile(phone);
 
@@ -63,8 +78,7 @@ export default function LoginPage() {
     } catch (err) {
       console.error(err);
       toast.error(err instanceof Error ? err.message : "Failed to send OTP");
-      recaptchaRef.current?.clear();
-      recaptchaRef.current = null;
+      resetRecaptcha();
     } finally {
       setLoading(false);
     }
