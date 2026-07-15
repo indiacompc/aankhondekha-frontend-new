@@ -36,6 +36,12 @@ service cloud.firestore {
       allow create, delete: if isAdmin();
     }
 
+    // Counters (e.g. sequential ticket ids): incremented inside the booking
+    // transaction, so any signed-in user may read/update.
+    match /counters/{id} {
+      allow read, write: if signedIn();
+    }
+
     // Customer profiles: each user owns their own doc; admins may read and also
     // register/update customers from the manual-booking screen.
     match /customers/{uid} {

@@ -156,9 +156,12 @@ export async function bookTicket(input: BookingInput): Promise<string> {
   }
 
   const slotRef = doc(db, "slots", input.slot.id);
-  const ticketRef = doc(collection(db, "tickets"));
+  const counterRef = doc(db, "counters", "tickets");
   const totalRequested = input.quantity + input.complimentaryTicket;
 
+  // Sequential ticket ids (continue the legacy numbering). Allocated inside the
+  // transaction from a counter doc so ids stay serial and gap-free.
+  let newId = "";
   await runTransaction(db, async (tx) => {
     const slotSnap = await tx.get(slotRef);
     if (!slotSnap.exists()) throw new Error("Slot no longer exists");
@@ -166,6 +169,12 @@ export async function bookTicket(input: BookingInput): Promise<string> {
     if (available < totalRequested) {
       throw new Error("Not enough seats available for this slot");
     }
+
+    const counterSnap = await tx.get(counterRef);
+    const last = counterSnap.exists() ? (counterSnap.data().lastId as number) : 0;
+    const next = last + 1;
+    newId = String(next);
+    const ticketRef = doc(db, "tickets", newId);
 
     const ticket: Omit<Ticket, "id"> = {
       uid: input.uid,
@@ -190,10 +199,11 @@ export async function bookTicket(input: BookingInput): Promise<string> {
     };
 
     tx.update(slotRef, { availableSeats: available - totalRequested });
+    tx.set(counterRef, { lastId: next }, { merge: true });
     tx.set(ticketRef, { ...ticket, createdAt: serverTimestamp() });
   });
 
-  return ticketRef.id;
+  return newId;
 }
 
 /** Mark a ticket checked-in (used). Returns the ticket if it existed. */
