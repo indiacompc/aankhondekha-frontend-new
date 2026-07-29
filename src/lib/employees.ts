@@ -31,4 +31,5 @@ export const EMPLOYEES: Record<string, EmployeeCred> = {
   // Travendra: { password: "Btravendra", mobile: "7415114635" },
   Sejal: { password: "Bsejal", mobile: "9244538574" },
   "Shivam B": { password: "BShivam", mobile: "8358914568" },
+  "Abhishek Chapke": { password: "abhishek", mobile: "7693912982" },
 };
