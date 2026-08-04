@@ -407,16 +407,31 @@ export async function createFieldVisit(
   return docRef.id;
 }
 
+/**
+ * Timestamps are stored as UTC ISO strings, but the date pickers mean local
+ * days — so the range has to be shifted, or a 00:00–05:30 IST visit lands
+ * outside its own day.
+ */
+function localDayBoundsUtc(startDate: string, endDate: string) {
+  const [ys, ms, ds] = startDate.split("-").map(Number);
+  const [ye, me, de] = endDate.split("-").map(Number);
+  return {
+    from: new Date(ys, ms - 1, ds, 0, 0, 0, 0).toISOString(),
+    to: new Date(ye, me - 1, de, 23, 59, 59, 999).toISOString(),
+  };
+}
+
 /** Field-visit records within an inclusive date range (newest first). */
 export async function getFieldVisitsByDateRange(
   startDate: string,
   endDate: string,
 ): Promise<FieldVisit[]> {
+  const { from, to } = localDayBoundsUtc(startDate, endDate);
   const snap = await getDocs(
     query(
       collection(db, "fieldVisits"),
-      where("timestamp", ">=", `${startDate}T00:00:00`),
-      where("timestamp", "<=", `${endDate}T23:59:59`),
+      where("timestamp", ">=", from),
+      where("timestamp", "<=", to),
       orderBy("timestamp", "desc"),
     ),
   );
