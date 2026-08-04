@@ -16,7 +16,7 @@ import {
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "./firebase";
 import { gstInclusive, todayISO } from "./booking";
-import { slotsForDate } from "./slots";
+import { closureReason, slotsForDate } from "./slots";
 import type {
   EventDoc,
   FieldVisit,
@@ -335,14 +335,16 @@ export async function getAllTicketTypes(): Promise<Record<string, unknown>[]> {
 /**
  * Create the standard slots for an event on a date. Idempotent: existing slots
  * (by deterministic id) are left untouched so booked capacity is preserved.
- * Returns how many were created vs. already existed.
+ * Returns how many were created vs. already existed, plus the closure reason
+ * when the centre is shut that day (no slots are written then).
  */
 export async function createSlotsForDate(
   eventId: string,
   slotDate: string,
-): Promise<{ created: number; skipped: number }> {
+): Promise<{ created: number; skipped: number; closed: string | null }> {
+  const closed = closureReason(eventId, slotDate);
   const planned = slotsForDate(eventId, slotDate);
-  if (planned.length === 0) return { created: 0, skipped: 0 };
+  if (planned.length === 0) return { created: 0, skipped: 0, closed };
 
   const existing = await getDocs(
     query(
@@ -361,7 +363,7 @@ export async function createSlotsForDate(
   }
   if (toCreate.length) await batch.commit();
 
-  return { created: toCreate.length, skipped: planned.length - toCreate.length };
+  return { created: toCreate.length, skipped: planned.length - toCreate.length, closed };
 }
 
 /* --------------------------- admin: reports --------------------------- */

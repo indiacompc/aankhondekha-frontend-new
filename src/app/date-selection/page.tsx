@@ -9,8 +9,12 @@ import BackButton from "@/components/BackButton";
 import GlassCard from "@/components/GlassCard";
 import PageTransition from "@/components/PageTransition";
 import { useBooking } from "@/components/BookingProvider";
+import { closureReason } from "@/lib/slots";
 
 const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+const toIso = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
 export default function DateSelection() {
   const router = useRouter();
@@ -48,9 +52,7 @@ export default function DateSelection() {
 
   const handleContinue = () => {
     if (!selectedDate) return;
-    setDate(
-      `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(2, "0")}`,
-    );
+    setDate(toIso(selectedDate));
     router.push("/slot-selection");
   };
 
@@ -97,16 +99,20 @@ export default function DateSelection() {
             {calendarDays.map((day, index) => {
               if (!day) return <div key={`empty-${index}`} className="h-10" />;
               const isPast = isBefore(day, today) && !isToday(day);
+              const closed = closureReason(event.eventId, toIso(day));
+              const disabled = isPast || closed !== null;
               const isSelected = selectedDate
                 ? day.toDateString() === selectedDate.toDateString()
                 : false;
               return (
                 <button
                   key={day.toDateString()}
-                  disabled={isPast}
-                  onClick={() => !isPast && setSelectedDate(day)}
+                  disabled={disabled}
+                  title={closed ? `Closed — ${closed}` : undefined}
+                  onClick={() => !disabled && setSelectedDate(day)}
                   className={`h-10 rounded-full flex items-center justify-center text-sm text-white transition-all
                     ${isPast ? "text-white/30" : "hover:bg-[#96FF00]/10"}
+                    ${!isPast && closed ? "text-white/30 line-through hover:bg-transparent cursor-not-allowed" : ""}
                     ${isSelected ? "bg-[#96FF00] !text-black" : ""}`}
                 >
                   {format(day, "d")}
@@ -114,6 +120,13 @@ export default function DateSelection() {
               );
             })}
           </div>
+
+          {calendarDays.some((d) => d && closureReason(event.eventId, toIso(d))) && (
+            <p className="mt-4 text-center text-xs text-white/50">
+              <span className="line-through">Struck-through</span> dates are holidays —{" "}
+              {event.location} is closed.
+            </p>
+          )}
         </GlassCard>
 
         <motion.button

@@ -6,6 +6,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import BackButton from "@/components/BackButton";
 import { AdminGuard } from "@/components/AdminGuard";
 import { getEvents, createSlotsForDate } from "@/lib/db";
+import { isClosed } from "@/lib/slots";
 import type { EventDoc } from "@/lib/types";
 
 // returns YYYY-MM-DD in local time (matches the old app's formatLocalDate)
@@ -19,11 +20,13 @@ function SlotCard({ event }: { event: EventDoc }) {
     if (!date) return setMessage(`❗ Please select ${event.location} date`);
     setMessage(`⏳ Generating ${event.location} slots...`);
     try {
-      const { created, skipped } = await createSlotsForDate(
+      const { created, skipped, closed } = await createSlotsForDate(
         event.eventId,
         formatLocalDate(date),
       );
-      if (created === 0 && skipped === 0) {
+      if (closed) {
+        setMessage(`🚫 ${event.location} is closed that day (${closed}) — no slots created`);
+      } else if (created === 0 && skipped === 0) {
         setMessage("❌ No slot pattern defined for this location");
       } else {
         setMessage(`✅ ${created} slots created, ${skipped} already existed`);
@@ -46,6 +49,7 @@ function SlotCard({ event }: { event: EventDoc }) {
           dateFormat="yyyy-MM-dd"
           placeholderText={`Select ${event.location} date`}
           minDate={new Date()}
+          filterDate={(d: Date) => !isClosed(event.eventId, formatLocalDate(d))}
           className="bg-[#1f1f1f] text-white border border-[#96FF00] rounded px-4 py-2 w-full"
         />
 

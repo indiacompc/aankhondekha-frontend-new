@@ -51,11 +51,19 @@ const TICKET_TYPES = [
   { typeName: "Immersive VR", eventId: "3", durationMinutes: 10, price: 129, originalPrice: 220, description: "water-sports VR experience" },
 ];
 
-// Slot generation patterns per event.
+// Slot generation patterns per event (must match src/lib/slots.ts).
+//   Orchha (1):        08:00–19:30, open every day
+//   MPT Boat Club (3): 16:00–20:00, closed on the holidays in closures.json
 const SLOT_PATTERNS = {
-  1: { startMin: 9 * 60, endMin: 22 * 60, intervalMin: 15, capacity: 6 },
-  3: { startMin: 12 * 60, endMin: 22 * 60, intervalMin: 15, capacity: 10 },
+  1: { startMin: 8 * 60, endMin: 19 * 60 + 30, intervalMin: 15, capacity: 6 },
+  3: { startMin: 16 * 60, endMin: 20 * 60, intervalMin: 15, capacity: 10 },
 };
+
+// Shared with the app: { eventId: { "YYYY-MM-DD": reason } }.
+const CLOSURES = JSON.parse(
+  readFileSync(join(root, "src", "lib", "closures.json"), "utf8"),
+);
+const isClosed = (eventId, slotDate) => Boolean(CLOSURES[eventId]?.[slotDate]);
 
 const SUPER_ADMIN = {
   email: process.env.SEED_ADMIN_EMAIL || "admin@aankhondekha.com",
@@ -120,6 +128,7 @@ async function seedSlots(days) {
     const slotDate = isoDate(date);
 
     for (const [eventId, p] of Object.entries(SLOT_PATTERNS)) {
+      if (isClosed(eventId, slotDate)) continue; // centre shut that day
       for (let t = p.startMin; t < p.endMin; t += p.intervalMin) {
         const slotTime = `${fmtTime(t)} - ${fmtTime(t + p.intervalMin)}`;
         const id = `${eventId}_${slotDate}_${t}`;
