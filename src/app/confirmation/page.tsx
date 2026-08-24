@@ -8,6 +8,7 @@ import { QRCodeCanvas } from "qrcode.react";
 import { CheckCircle2, Home } from "lucide-react";
 import { getTicketById, getGiftTicketById } from "@/lib/db";
 import { useBooking } from "@/components/BookingProvider";
+import { trackPurchase } from "@/lib/analytics";
 
 interface DisplayRecord {
   id: string;
@@ -31,6 +32,25 @@ function Confirmation() {
   const { clearBooking } = useBooking();
   const [record, setRecord] = useState<DisplayRecord | null>(null);
   const [loading, setLoading] = useState(true);
+
+  /**
+   * Report the sale once the booking has been read back from Firestore.
+   *
+   * Fired here rather than on the payment screen deliberately: reaching this
+   * page with a record means the ticket exists in the database, so an abandoned
+   * or failed payment can never be counted as revenue. trackPurchase dedupes on
+   * the ticket id, so refreshes and revisits do not double count.
+   */
+  useEffect(() => {
+    if (!record) return;
+    trackPurchase({
+      transactionId: record.id,
+      value: record.totalAmount,
+      location: record.location,
+      ticketType: record.typeName,
+      quantity: record.quantity,
+    });
+  }, [record]);
 
   useEffect(() => {
     clearBooking(); // booking is finalised; reset in-flight selections
