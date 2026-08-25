@@ -113,8 +113,8 @@ export default function Newsletter() {
             Newsletter Archive
           </h1>
           <p className="text-gray-400 mt-3 max-w-xl mx-auto">
-            Catch up on past issues — updates, visitor stories and news from
-            across our VR experience centres.
+            Catch up on past issues — updates, visitor stories and news from our
+            VR experience centre and on field photography by our team.
           </p>
         </div>
 
@@ -179,6 +179,18 @@ export default function Newsletter() {
             })}
           </ul>
         )}
+
+        <div className="mt-12 pt-6 border-t border-white/10 text-center">
+          <p className="text-gray-400 text-sm">
+            Commissioned by the Commissioner of Archaeology,{" "}
+            <span className="text-white">Mr. Madan Nagargoje, IAS</span>
+          </p>
+          <p className="text-gray-400 text-sm mt-1">
+            VR content by{" "}
+            <span className="text-[#96FF00]">Aankhon Dekha VR Centre</span>,
+            Bhopal / Orchha
+          </p>
+        </div>
       </main>
 
       <Footer />
