@@ -39,31 +39,13 @@ const issues: NewsletterIssue[] = [
     cover: "/newsletter/2026/dindori-coral-fossil-main.jpg",
   },
   {
-    id: "2026-bsss-heritage-trail",
-    title: "Heritage Walk: A Historic Journey from Rani Kamlapati to Taj-ul-Masajid",
-    date: "2026-08-25",
-    excerpt:
-      "BSSS students set out at 6:30 AM on a heritage trail across Bhopal, ending with the Aankhon Dekha VR show and the Tribal Museum at the State Museum.",
-    url: "/newsletter/2026/BSSS_Heritage_Trail.html",
-    cover: "/newsletter/2026/bsss-heritage-walk-sandhyaprakash.jpg",
-  },
-  {
-    id: "2026-bsss-face-to-face-history",
-    title: "Heritage Walk: BSSS Students Come Face-to-Face with History",
-    date: "2026-08-25",
-    excerpt:
-      "A one-day excursion across eight of Bhopal's landmarks — with the Aankhon Dekha VR show at the State Museum named the most memorable stop of the day.",
-    url: "/newsletter/2026/BSSS_Face_To_Face_With_History.html",
-    cover: "/newsletter/2026/bsss-heritage-walk-jagran.jpg",
-  },
-  {
     id: "2026-bsss-heritage-walk",
-    title: "BSSS Students Discover Bhopal's Heritage",
+    title: "Heritage Walk: BSSS Students Come Face-to-Face with Bhopal's History",
     date: "2026-08-25",
     excerpt:
-      "A one-day heritage walk took Bhopal School of Social Sciences students from Rani Kamlapati Palace to Taj-ul-Masajid and Gohar Mahal.",
+      "BSSS students set out at 6:30 AM across eight of Bhopal's landmarks, with the Aankhon Dekha VR show at the State Museum named the most memorable stop of the day.",
     url: "/newsletter/2026/BSSS_Heritage_Walk.html",
-    cover: "/newsletter/2026/bsss-heritage-walk-haribhoomi.jpg",
+    cover: "/newsletter/2026/bsss-heritage-walk-sandhyaprakash.jpg",
   },
   {
     id: "2026-education-vr",
