@@ -30,6 +30,15 @@ interface NewsletterIssue {
  */
 const issues: NewsletterIssue[] = [
   {
+    id: "2026-dindori-coral-fossil",
+    title: "MP Shrine Turns Out To Be a 65-Million-Year-Old Coral Fossil",
+    date: "2026-08-25",
+    excerpt:
+      "The Baiga tribe guarded a Dindori forest shrine for centuries. Science revealed a coral fossil from the dinosaur era — and it is headed into AR and VR.",
+    url: "/newsletter/2026/Dindori_Coral_Fossil_Shrine.html",
+    cover: "/newsletter/2026/dindori-coral-fossil-main.jpg",
+  },
+  {
     id: "2026-bsss-heritage-trail",
     title: "Heritage Walk: A Historic Journey from Rani Kamlapati to Taj-ul-Masajid",
     date: "2026-08-25",
@@ -55,15 +64,6 @@ const issues: NewsletterIssue[] = [
       "A one-day heritage walk took Bhopal School of Social Sciences students from Rani Kamlapati Palace to Taj-ul-Masajid and Gohar Mahal.",
     url: "/newsletter/2026/BSSS_Heritage_Walk.html",
     cover: "/newsletter/2026/bsss-heritage-walk-haribhoomi.jpg",
-  },
-  {
-    id: "2026-dindori-coral-fossil",
-    title: "MP Shrine Turns Out To Be a 65-Million-Year-Old Coral Fossil",
-    date: "2026-08-25",
-    excerpt:
-      "The Baiga tribe guarded a Dindori forest shrine for centuries. Science revealed a coral fossil from the dinosaur era — and it is headed into AR and VR.",
-    url: "/newsletter/2026/Dindori_Coral_Fossil_Shrine.html",
-    cover: "/newsletter/2026/dindori-coral-fossil-main.jpg",
   },
   {
     id: "2026-education-vr",
